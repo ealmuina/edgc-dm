@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <time.h>
 
 #include <jansson.h>
 
@@ -13,6 +14,7 @@
 #define REGISTER_ADDR "http://localhost:5000/api/register"
 #define SERVER_ADDR "http://localhost:5000"
 #define TASK_ADDR "http://localhost:5000/api/task"
+#define REPORT_ADDR "http://localhost:5000/api/report"
 
 struct task {
     const char *kernel, *input, *kernel_md5, *input_md5;
@@ -31,7 +33,7 @@ void download_task(struct task *task) {
 
 struct task get_task_info(int id) {
     char url[1024];
-    sprintf(url, "%s?nodeId=%d", TASK_ADDR, id);
+    sprintf(url, "%s?domainId=%d", TASK_ADDR, id);
 
     char *text = get(url);
     struct task task_info;
@@ -68,20 +70,45 @@ int validate_task(struct task *task) {
     return 1;
 }
 
+void report_task(struct task *task, int domain_id) {
+    char buffer[1024];
+    sprintf(buffer, "%s?taskId=%d&domainId=%d", REPORT_ADDR, task->id, domain_id);
+    upload(buffer, "output.txt");
+}
+
+void print_log(char *msg) {
+    time_t rawtime;
+    time(&rawtime);
+    char *time = strtok(ctime(&rawtime), "\n");
+    printf("[%s] %s", time, msg);
+}
+
 int main() {
+    char buffer[1024];
+
     int id = register_domain();
-    printf("Registered with id: %d\n", id);
+    sprintf(buffer, "Registered with id: %d\n", id);
+    print_log(buffer);
 
     struct task task = get_task_info(id);
-    printf("Received task %d\n", task.id);
+    sprintf(buffer, "Received task %d\n", task.id);
+    print_log(buffer);
 
     download_task(&task);
-    printf("Downloaded task %d content\n", task.id);
+    sprintf(buffer, "Downloaded task %d content\n", task.id);
+    print_log(buffer);
 
-    if (validate_task(&task))
-        printf("Task %d downloaded correctly\n", task.id);
-    else
-        printf("Task %d corrupted\n", task.id);
+    if (validate_task(&task)) {
+        sprintf(buffer, "Task %d downloaded correctly\n", task.id);
+        print_log(buffer);
+
+        report_task(&task, id);
+        sprintf(buffer, "Result of task %d reported\n", task.id);
+        print_log(buffer);
+    } else {
+        sprintf(buffer, "Task %d corrupted\n", task.id);
+        print_log(buffer);
+    }
 
     return 0;
 }
