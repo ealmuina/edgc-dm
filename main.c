@@ -6,23 +6,29 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <jansson.h>
 
+#include "http.c"
+#include "monitor.h"
 #include "utils.c"
 
+#define FIELD_SIZE 1024
 #define REGISTER_ADDR "http://localhost:5000/api/register"
 #define SERVER_ADDR "http://localhost:5000"
 #define TASK_ADDR "http://localhost:5000/api/task"
 #define REPORT_ADDR "http://localhost:5000/api/report"
 
 struct task {
-    const char *kernel, *input, *kernel_md5, *input_md5;
+    char kernel[FIELD_SIZE], input[FIELD_SIZE], kernel_md5[FIELD_SIZE], input_md5[FIELD_SIZE];
     int id;
 };
 
+char big_buffer[FIELD_SIZE * BUFFER_SIZE];
+
 void download_task(struct task *task) {
-    char buffer[1024];
+    char buffer[BUFFER_SIZE];
 
     sprintf(buffer, "%s/%s", SERVER_ADDR, task->kernel);
     download(buffer, task->kernel);
@@ -32,7 +38,7 @@ void download_task(struct task *task) {
 }
 
 struct task get_task_info(int id) {
-    char url[1024];
+    char url[BUFFER_SIZE];
     sprintf(url, "%s?domainId=%d", TASK_ADDR, id);
 
     char *text = get(url);
@@ -40,20 +46,40 @@ struct task get_task_info(int id) {
 
     json_t *root = json_loads(text, 0, NULL);
     task_info.id = json_integer_value(json_object_get(root, "id"));
-    task_info.kernel = json_string_value(json_object_get(root, "kernel"));
-    task_info.kernel_md5 = json_string_value(json_object_get(root, "kernel_md5"));
-    task_info.input = json_string_value(json_object_get(root, "input"));
-    task_info.input_md5 = json_string_value(json_object_get(root, "input_md5"));
+    strcpy(task_info.kernel, json_string_value(json_object_get(root, "kernel")));
+    strcpy(task_info.kernel_md5, json_string_value(json_object_get(root, "kernel_md5")));
+    strcpy(task_info.input, json_string_value(json_object_get(root, "input")));
+    strcpy(task_info.input_md5, json_string_value(json_object_get(root, "input_md5")));
 
+    json_decref(root);
     free(text);
     return task_info;
 }
 
 int register_domain() {
-    char *text = post(REGISTER_ADDR, "{\"nodes\":1}");
+    big_buffer[0] = '[';
+
+    pthread_mutex_lock(&monitor_lock);
+    for (int i = 0; i < NODES_MAX; ++i) {
+        if (nodes[i].active) {
+            strcat(big_buffer, nodes[i].stats);
+            strcat(big_buffer, ",");
+        }
+    }
+    pthread_mutex_unlock(&monitor_lock);
+    int len = strlen(big_buffer);
+    if (big_buffer[len - 1] == ',')
+        big_buffer[len - 1] = ']';
+    else
+        strcat(big_buffer, "]");
+
+    char *text = post(REGISTER_ADDR, big_buffer);
     json_t *root = json_loads(text, 0, NULL);
+    int id = json_integer_value(json_object_get(root, "id"));
+
     free(text);
-    return json_integer_value(json_object_get(root, "id"));
+    json_decref(root);
+    return id;
 }
 
 int validate_task(struct task *task) {
@@ -71,7 +97,7 @@ int validate_task(struct task *task) {
 }
 
 void report_task(struct task *task, int domain_id) {
-    char buffer[1024];
+    char buffer[BUFFER_SIZE];
     sprintf(buffer, "%s?taskId=%d&domainId=%d", REPORT_ADDR, task->id, domain_id);
     upload(buffer, "output.txt");
 }
@@ -84,7 +110,12 @@ void print_log(char *msg) {
 }
 
 int main() {
-    char buffer[1024];
+    char buffer[BUFFER_SIZE];
+
+    start_monitor();
+    print_log("Program will wait 30 seconds for recovering nodes data");
+    fflush(stdout);
+    sleep(5); // wait to receive nodes data first
 
     int id = register_domain();
     sprintf(buffer, "Registered with id: %d\n", id);
