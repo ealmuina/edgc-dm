@@ -106,7 +106,7 @@ void print_log(char *msg) {
     time_t rawtime;
     time(&rawtime);
     char *time = strtok(ctime(&rawtime), "\n");
-    printf("[%s] %s", time, msg);
+    printf("[%s] %s\n", time, msg);
 }
 
 int main() {
@@ -118,26 +118,26 @@ int main() {
     sleep(5); // wait to receive nodes data first
 
     int id = register_domain();
-    sprintf(buffer, "Registered with id: %d\n", id);
+    sprintf(buffer, "Registered with id: %d", id);
     print_log(buffer);
 
     struct task task = get_task_info(id);
-    sprintf(buffer, "Received task %d\n", task.id);
+    sprintf(buffer, "Received task %d", task.id);
     print_log(buffer);
 
     download_task(&task);
-    sprintf(buffer, "Downloaded task %d content\n", task.id);
+    sprintf(buffer, "Downloaded task %d content", task.id);
     print_log(buffer);
 
     if (validate_task(&task)) {
-        sprintf(buffer, "Task %d downloaded correctly\n", task.id);
+        sprintf(buffer, "Task %d downloaded correctly", task.id);
         print_log(buffer);
 
         report_task(&task, id);
-        sprintf(buffer, "Result of task %d reported\n", task.id);
+        sprintf(buffer, "Result of task %d reported", task.id);
         print_log(buffer);
     } else {
-        sprintf(buffer, "Task %d corrupted\n", task.id);
+        sprintf(buffer, "Task %d corrupted", task.id);
         print_log(buffer);
     }
 
