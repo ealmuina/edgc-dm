@@ -21,18 +21,19 @@ void *monitor_func(void *args) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
+        // Receive statistics from a node
         n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         buffer[n] = '\0';
 
-        if (!cli_addr.sin_addr.s_addr) continue; //skip address 0
+        if (!cli_addr.sin_addr.s_addr) continue; //skip if node address is 0
 
-        time_t rawtime;
-        time(&rawtime);
+        // Get time for knowing last time the node was seen
+        time_t now;
+        time(&now);
 
+        // Search node in the list
         int index = 0;
-
         pthread_mutex_lock(&monitor_lock);
-        // Search item in nodes list
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && nodes[i].addr == cli_addr.sin_addr.s_addr) {
@@ -40,11 +41,17 @@ void *monitor_func(void *args) {
                 break;
             }
         }
+        // Update or create entry
         if (index != NODES_MAX) { // There is still space for this node
             nodes[index].active = 1;
             strcpy(nodes[index].stats, buffer);
-            nodes[index].last_seen = rawtime;
+            nodes[index].last_seen = now;
             nodes[index].addr = cli_addr.sin_addr.s_addr;
+        }
+        // Remove nodes that have not been seen in a while
+        for (int i = 0; i < NODES_MAX; ++i) {
+            if (difftime(now, nodes[i].last_seen) > TIMEOUT)
+                nodes[i].active = 0;
         }
         pthread_mutex_unlock(&monitor_lock);
     }

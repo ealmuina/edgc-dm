@@ -113,7 +113,7 @@ int main() {
     char buffer[BUFFER_SIZE];
 
     start_monitor();
-    print_log("Program will wait 30 seconds for recovering nodes data");
+    print_log("Program will wait 5 seconds for recovering nodes data");
     fflush(stdout);
     sleep(5); // wait to receive nodes data first
 
