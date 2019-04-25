@@ -8,15 +8,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <time.h>
-#include<pthread.h>
+#include <pthread.h>
 
 #define BUFFER_SIZE  (256 * 1024)  /* 256 KB */
 #define TIMEOUT 180
 #define NODES_MAX 1024
+#define MONITOR_PORT 9910
 
 struct node {
     char stats[BUFFER_SIZE];
-    int active;
+    int active, cores;
+    double loadavg;
     time_t last_seen;
     in_addr_t addr;
 };

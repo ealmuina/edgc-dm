@@ -1,7 +1,7 @@
 #include "monitor.h"
 
 void *monitor_func(void *args) {
-    int sockfd, newsockfd, portno, clilen;
+    int sockfd;
     char buffer[BUFFER_SIZE];
     struct sockaddr_in serv_addr, cli_addr;
     int n, len;
@@ -11,10 +11,9 @@ void *monitor_func(void *args) {
     setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = 9910;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(MONITOR_PORT);
 
     bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 
@@ -31,6 +30,14 @@ void *monitor_func(void *args) {
         time_t now;
         time(&now);
 
+        // Extract loadavg from received data
+        double loadavg = *(double *) buffer;
+        char *stats = buffer + sizeof(double);
+
+        // Extract number of processors from received data
+        int cores = *(int *) stats;
+        stats += sizeof(int);
+
         // Search node in the list
         int index = 0;
         pthread_mutex_lock(&monitor_lock);
@@ -44,9 +51,11 @@ void *monitor_func(void *args) {
         // Update or create entry
         if (index != NODES_MAX) { // There is still space for this node
             nodes[index].active = 1;
-            strcpy(nodes[index].stats, buffer);
+            strcpy(nodes[index].stats, stats);
             nodes[index].last_seen = now;
             nodes[index].addr = cli_addr.sin_addr.s_addr;
+            nodes[index].loadavg = loadavg;
+            nodes[index].cores = cores;
         }
         // Remove nodes that have not been seen in a while
         for (int i = 0; i < NODES_MAX; ++i) {
