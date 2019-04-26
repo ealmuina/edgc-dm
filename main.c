@@ -61,7 +61,13 @@ int main() {
     sprintf(buffer, "Registered with id: %d", id);
     print_log(buffer);
 
+    // Initialize reporter
+    start_reporter(id);
+
+    // Process a task
     process_task(id);
+
+    sleep(100);
 
     return 0;
 }

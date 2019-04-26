@@ -19,6 +19,6 @@ pthread_mutex_t tasks_lock;
 
 void *report_func(void *args);
 
-void start_reporter();
+void start_reporter(int id);
 
 #endif //EDGC_DM_REPORT_H

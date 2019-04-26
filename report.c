@@ -1,15 +1,15 @@
 #include "report.h"
 
 void *report_func(void *args) {
-    int domain_id = (int) args;
+    int domain_id = *(int *) args;
     int sockfd, len, id;
     struct sockaddr_in serv_addr, cli_addr;
 
-    sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    int broadcastEnable = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
+    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    memset(&cli_addr, 0, sizeof(cli_addr));
+
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(REPORT_PORT);
@@ -19,9 +19,7 @@ void *report_func(void *args) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
-        // TODO: Receive id from controller
-//        int n = recvfrom(sockfd, &id, sizeof(int), 0, (struct sockaddr *) &cli_addr, &len);
-        id = 1;
+        int n = recvfrom(sockfd, &id, sizeof(int), 0, (struct sockaddr *) &cli_addr, &len);
 
         // Find task index
         int index;
@@ -36,6 +34,9 @@ void *report_func(void *args) {
         sprintf(buffer, "%s?taskId=%d&domainId=%d", REPORT_ADDR, tasks[index].id, domain_id);
         upload(buffer, tasks[index].output);
         tasks[index].active = 0;
+        // Report to log
+        sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
+        print_log(buffer);
         pthread_mutex_unlock(&tasks_lock);
     }
 #pragma clang diagnostic pop
