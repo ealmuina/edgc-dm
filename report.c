@@ -1,4 +1,4 @@
-#include "report.h"
+#include "include/report.h"
 
 void *report_func(void *args) {
     int domain_id = *(int *) args;

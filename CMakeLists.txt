@@ -3,7 +3,13 @@ project(edgc-dm C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(edgc-dm main.c http.c http.h utils.c utils.h monitor.c monitor.h report.c report.h task.c task.h)
+add_executable(edgc-dm
+        main.c
+        http.c include/http.h
+        utils.c include/utils.h
+        monitor.c include/monitor.h
+        report.c include/report.h
+        task.c include/task.h)
 
 target_link_libraries(edgc-dm jansson)
 target_link_libraries(edgc-dm curl)

@@ -10,11 +10,11 @@
 
 #include <jansson.h>
 
-#include "http.h"
-#include "monitor.h"
-#include "utils.h"
-#include "report.h"
-#include "task.h"
+#include "include/http.h"
+#include "include/monitor.h"
+#include "include/utils.h"
+#include "include/report.h"
+#include "include/task.h"
 
 #define FIELD_SIZE 1024
 #define REGISTER_ADDR "http://localhost:5000/api/register"
