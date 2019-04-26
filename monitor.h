@@ -10,21 +10,23 @@
 #include <time.h>
 #include <pthread.h>
 
-#define BUFFER_SIZE  (256 * 1024)  /* 256 KB */
+#include "utils.h"
+
 #define TIMEOUT 180
 #define NODES_MAX 1024
 #define MONITOR_PORT 9910
+#define LOAD_EPSILON 0.1
+#define MAX_LOAD 0.9
 
 struct node {
     char stats[BUFFER_SIZE];
-    int active, cores;
-    double loadavg;
+    int active, cpus, processes;
+    float cpu_load;
     time_t last_seen;
     in_addr_t addr;
 };
 
 struct node nodes[NODES_MAX];
-
 pthread_mutex_t monitor_lock;
 
 void *monitor_func(void *args);

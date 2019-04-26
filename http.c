@@ -1,22 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <curl/curl.h>
-#include <sys/stat.h>
+#include "http.h"
 
-#define BUFFER_SIZE  (256 * 1024)  /* 256 KB */
-
-struct write_result {
-    char *data;
-    int pos;
-};
-
-struct write_this {
-    const char *readptr;
-    size_t sizeleft;
-};
-
-static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp) {
+size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp) {
     struct write_this *wt = (struct write_this *) userp;
     size_t buffer_size = size * nmemb;
 
@@ -35,12 +19,12 @@ static size_t read_callback(void *dest, size_t size, size_t nmemb, void *userp) 
     return 0; /* no more data left to deliver */
 }
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     size_t written = fwrite(ptr, size, nmemb, (FILE *) stream);
     return written;
 }
 
-static size_t write_response(void *ptr, size_t size, size_t nmemb, void *stream) {
+size_t write_response(void *ptr, size_t size, size_t nmemb, void *stream) {
     struct write_result *result = (struct write_result *) stream;
 
     if (result->pos + size * nmemb >= BUFFER_SIZE - 1) {
@@ -54,7 +38,7 @@ static size_t write_response(void *ptr, size_t size, size_t nmemb, void *stream)
     return size * nmemb;
 }
 
-static void download(const char *url, const char *filename) {
+void download(const char *url, const char *filename) {
     CURL *curl;
     FILE *file;
 
@@ -92,7 +76,7 @@ static void download(const char *url, const char *filename) {
     curl_global_cleanup();
 }
 
-static char *get(const char *url) {
+char *get(const char *url) {
     CURL *curl = NULL;
     CURLcode status;
     char *data = NULL;
@@ -147,7 +131,7 @@ static char *get(const char *url) {
     return NULL;
 }
 
-static char *post(const char *url, const char *data) {
+char *post(const char *url, const char *data) {
     CURL *curl;
     CURLcode res;
 
@@ -212,7 +196,7 @@ static char *post(const char *url, const char *data) {
     return result;
 }
 
-static void upload(const char *url, const char *filename) {
+void upload(const char *url, const char *filename) {
     CURL *curl;
     CURLcode res;
 

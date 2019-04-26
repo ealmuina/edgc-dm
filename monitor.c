@@ -31,11 +31,11 @@ void *monitor_func(void *args) {
         time(&now);
 
         // Extract loadavg from received data
-        double loadavg = *(double *) buffer;
-        char *stats = buffer + sizeof(double);
+        float cpu_load = *(float *) buffer;
+        char *stats = buffer + sizeof(float);
 
         // Extract number of processors from received data
-        int cores = *(int *) stats;
+        int cpus = *(int *) stats;
         stats += sizeof(int);
 
         // Search node in the list
@@ -54,8 +54,32 @@ void *monitor_func(void *args) {
             strcpy(nodes[index].stats, stats);
             nodes[index].last_seen = now;
             nodes[index].addr = cli_addr.sin_addr.s_addr;
-            nodes[index].loadavg = loadavg;
-            nodes[index].cores = cores;
+            nodes[index].cpu_load = cpu_load;
+            nodes[index].cpus = cpus;
+
+            // Update processes if necessary
+            if (nodes[index].processes) {
+                if (cpu_load > MAX_LOAD) { // Load needs to be reduced
+                    nodes[index].processes--;
+                    sprintf(buffer, "Reduced load in node %d.", index);
+                    print_log(buffer);
+
+                    // TODO: Send signal to remove one process in node
+                } else {
+                    // Load could be increased
+                    float process_load = cpu_load / nodes[index].processes;
+                    float available_load = MAX_LOAD - cpu_load;
+                    int new_processes = (int) (available_load / process_load);
+
+                    // Increase if new_processes > 0
+                    if (new_processes > 0) {
+                        nodes[index].processes += new_processes;
+                        sprintf(buffer, "Increased load in node %d by %d processes.", index, new_processes);
+                        print_log(buffer);
+                        // TODO: Send signal to create new_processes in node
+                    }
+                }
+            }
         }
         // Remove nodes that have not been seen in a while
         for (int i = 0; i < NODES_MAX; ++i) {

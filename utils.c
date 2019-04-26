@@ -1,11 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <openssl/md5.h>
+#include "utils.h"
 
-#define BUFFER_SIZE  (256 * 1024)  /* 256 KB */
-
-static char *md5(const char *file_name) {
+char *md5(const char *file_name) {
     unsigned char c[MD5_DIGEST_LENGTH];
 
     FILE *inFile = fopen(file_name, "rb");
@@ -29,4 +24,11 @@ static char *md5(const char *file_name) {
 
     fclose(inFile);
     return hash;
+}
+
+void print_log(char *msg) {
+    time_t rawtime;
+    time(&rawtime);
+    char *time = strtok(ctime(&rawtime), "\n");
+    printf("[%s] %s\n", time, msg);
 }
