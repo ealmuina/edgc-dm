@@ -1,5 +1,7 @@
 #include "include/task.h"
 
+int FLEXMPI_ID = 0;
+
 void download_task(struct task *task) {
     char buffer[BUFFER_SIZE];
 
@@ -21,24 +23,26 @@ struct task get_task_info(int id) {
     sprintf(url, "%s?domainId=%d", TASK_ADDR, id);
 
     char *text = get(url);
-    struct task task_info;
+    struct task task;
 
     json_t *root = json_loads(text, 0, NULL);
-    task_info.id = json_integer_value(json_object_get(root, "id"));
-    strcpy(task_info.kernel, json_string_value(json_object_get(root, "kernel")));
-    strcpy(task_info.input, json_string_value(json_object_get(root, "input")));
-    strcpy(task_info.output, json_string_value(json_object_get(root, "output")));
-    strcpy(task_info.unpack, json_string_value(json_object_get(root, "unpack")));
-    strcpy(task_info.pack, json_string_value(json_object_get(root, "pack")));
+    task.id = json_integer_value(json_object_get(root, "id"));
+    strcpy(task.kernel, json_string_value(json_object_get(root, "kernel")));
+    strcpy(task.input, json_string_value(json_object_get(root, "input")));
+    strcpy(task.output, json_string_value(json_object_get(root, "output")));
+    strcpy(task.unpack, json_string_value(json_object_get(root, "unpack")));
+    strcpy(task.pack, json_string_value(json_object_get(root, "pack")));
 
-    strcpy(task_info.kernel_md5, json_string_value(json_object_get(root, "kernel_md5")));
-    strcpy(task_info.input_md5, json_string_value(json_object_get(root, "input_md5")));
-    strcpy(task_info.unpack_md5, json_string_value(json_object_get(root, "unpack_md5")));
-    strcpy(task_info.pack_md5, json_string_value(json_object_get(root, "pack_md5")));
+    strcpy(task.kernel_md5, json_string_value(json_object_get(root, "kernel_md5")));
+    strcpy(task.input_md5, json_string_value(json_object_get(root, "input_md5")));
+    strcpy(task.unpack_md5, json_string_value(json_object_get(root, "unpack_md5")));
+    strcpy(task.pack_md5, json_string_value(json_object_get(root, "pack_md5")));
+
+    task.flexmpi_id = FLEXMPI_ID++;
 
     json_decref(root);
     free(text);
-    return task_info;
+    return task;
 }
 
 int validate_file(char *file, char *received_hash) {
@@ -57,21 +61,37 @@ int validate_task(struct task *task) {
     return kernel && input && unpack && pack;
 }
 
-void request_execution(struct task *task) {
-    int cores[NODES_MAX];
-    memset(cores, 0, sizeof(int));
+void request_execution(struct task *task, int task_index) {
+    int root_node = 0, max_cores = -1;
 
     pthread_mutex_lock(&monitor_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             // Cores to be used will be the CPUs * free_fraction_of_load
-            cores[i] = (int) roundf(nodes[i].cpus * fmax(0, 1 - nodes[i].cpu_load + LOAD_EPSILON));
-            nodes[i].processes = cores[i];
+            int cores = (int) roundf(nodes[i].cpus * fmax(0, 1 - nodes[i].cpu_load + LOAD_EPSILON));
+
+            // Root node will be the one with the most cores
+            if (cores > max_cores) {
+                root_node = i;
+                max_cores = cores;
+            }
         }
     }
+
+    // Set the number of processes used in the root node
+    nodes[root_node].processes[task_index] = max_cores - 2;
+
+    char command[1024];
+    sprintf(command,
+            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:1:2.500000:2000:%s:%d\" %s",
+            nodes[root_node].hostname,
+            max_cores - 2,
+            "> /dev/null 2> /dev/null"
+    );
     pthread_mutex_unlock(&monitor_lock);
 
-    // TODO: Send signal to start execution
+    printf("\t-> %s\n", command);
+    system(command);
 }
 
 int process_task(int id) {
@@ -112,7 +132,9 @@ int process_task(int id) {
         if (validate_task(&task)) {
             sprintf(buffer, "Task %d downloaded correctly.", task.id);
             print_log(buffer);
-            request_execution(&task);
+            request_execution(&task, i);
+            sprintf(buffer, "Requested execution of task %d.", task.id);
+            print_log(buffer);
             return 0;
         } else {
             sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);

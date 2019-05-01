@@ -27,7 +27,7 @@
 struct task {
     char kernel[FIELD_SIZE], input[FIELD_SIZE], output[FIELD_SIZE], unpack[FIELD_SIZE], pack[FIELD_SIZE],
             kernel_md5[FIELD_SIZE], input_md5[FIELD_SIZE], unpack_md5[FIELD_SIZE], pack_md5[FIELD_SIZE];
-    int id, active;
+    int id, active, flexmpi_id;
 };
 
 struct task tasks[TASKS_MAX];
@@ -40,7 +40,7 @@ int validate_file(char *file, char *received_hash);
 
 int validate_task(struct task *task);
 
-void request_execution(struct task *task);
+void request_execution(struct task *task, int task_index);
 
 int process_task(int id);
 
