@@ -17,7 +17,7 @@
 #include "include/task.h"
 
 #define FIELD_SIZE 1024
-#define REGISTER_ADDR "http://localhost:5000/api/register"
+#define REGISTER_ADDR "http://E550:5000/api/register"
 
 char big_buffer[FIELD_SIZE * BUFFER_SIZE];
 
