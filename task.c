@@ -79,13 +79,13 @@ void request_execution(struct task *task, int task_index) {
     }
 
     // Set the number of processes used in the root node
-    nodes[root_node].processes[task_index] = max_cores - 2;
+    nodes[root_node].processes[task_index] = max_cores - 1;
 
     char command[1024];
     sprintf(command,
             "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:1:2.500000:2000:%s:%d\" %s",
             nodes[root_node].hostname,
-            max_cores - 2,
+            max_cores - 1,
             "> /dev/null 2> /dev/null"
     );
     pthread_mutex_unlock(&monitor_lock);

@@ -25,7 +25,7 @@ void *report_func(void *args) {
         int index;
         pthread_mutex_lock(&tasks_lock);
         for (index = 0; index < TASKS_MAX; ++index) {
-            if (tasks[index].active && tasks[index].id == id)
+            if (tasks[index].active && tasks[index].flexmpi_id == id)
                 break;
         }
         // Report task and set it to inactive
