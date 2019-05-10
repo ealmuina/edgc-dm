@@ -48,6 +48,7 @@ int register_domain() {
 }
 
 int main() {
+    int max_tasks = 1;
     char buffer[BUFFER_SIZE];
 
     // Initialize monitor and wait for nodes to report their statistics
@@ -64,10 +65,23 @@ int main() {
     // Initialize reporter
     start_reporter(id);
 
-    // Process a task
-    process_task(id);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+    while (1) {
+        int current_tasks = 0;
+        pthread_mutex_lock(&tasks_lock);
+        for (int i = 0; i < MAX_TASKS; ++i) {
+            if (tasks[i].active) current_tasks++;
+        }
+        pthread_mutex_unlock(&tasks_lock);
 
-    sleep(100);
+        // Process a task
+        if (current_tasks < max_tasks)
+            process_task(id);
+
+        sleep(60);
+    }
+#pragma clang diagnostic pop
 
     return 0;
 }
