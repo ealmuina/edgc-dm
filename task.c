@@ -18,15 +18,23 @@ void download_task(struct task *task) {
     download(buffer, task->pack);
 }
 
-struct task get_task_info(int id) {
+struct task get_task_info(int id, long *code) {
     char url[BUFFER_SIZE];
     sprintf(url, "%s?domainId=%d", TASK_ADDR, id);
 
-    char *text = get(url);
+    char *text = get(url, code);
     struct task task;
 
+    if (*code != 200)
+        return task;
+
     json_t *root = json_loads(text, 0, NULL);
+
     task.id = json_integer_value(json_object_get(root, "id"));
+    task.cpu_intensity = json_integer_value(json_object_get(root, "cpu_intensity"));
+    task.com_intensity = json_integer_value(json_object_get(root, "com_intensity"));
+    task.io_intensity = json_integer_value(json_object_get(root, "io_intensity"));
+
     strcpy(task.kernel, json_string_value(json_object_get(root, "kernel")));
     strcpy(task.input, json_string_value(json_object_get(root, "input")));
     strcpy(task.output, json_string_value(json_object_get(root, "output")));
@@ -79,13 +87,16 @@ void request_execution(struct task *task, int task_index) {
     }
 
     // Set the number of processes used in the root node
-    nodes[root_node].processes[task_index] = max_cores - 1;
+    nodes[root_node].processes[task_index] = max_cores;
 
     char command[1024];
     sprintf(command,
-            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:1:2.500000:100:%s:%d\" %s",
+            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:%d:%d:%d:2.500000:100:%s:%d\" %s",
+            task->cpu_intensity,
+            task->com_intensity,
+            task->io_intensity,
             nodes[root_node].hostname,
-            max_cores - 1,
+            max_cores,
             "> /dev/null 2> /dev/null"
     );
     pthread_mutex_unlock(&monitor_lock);
@@ -98,55 +109,65 @@ int process_task(int id) {
     char buffer[BUFFER_SIZE];
 
     // Request task
-    struct task task = get_task_info(id);
-    sprintf(buffer, "Received task %d.", task.id);
-    print_log(buffer);
+    long code;
+    struct task task = get_task_info(id, &code);
 
-    // Save task
-    int i;
-    pthread_mutex_lock(&tasks_lock);
-    for (i = 0; i < TASKS_MAX; ++i) {
-        if (!tasks[i].active) {
-            tasks[i].id = task.id;
-            tasks[i].active = 1;
-            strcpy(tasks[i].kernel, task.kernel);
-            strcpy(tasks[i].input, task.input);
-            strcpy(tasks[i].output, task.output);
-            strcpy(tasks[i].unpack, task.pack);
-            strcpy(tasks[i].kernel_md5, task.kernel_md5);
-            strcpy(tasks[i].input_md5, task.input_md5);
-            strcpy(tasks[i].unpack_md5, task.unpack_md5);
-            strcpy(tasks[i].pack_md5, task.pack_md5);
-            break;
-        }
-    }
-    pthread_mutex_unlock(&tasks_lock);
-
-    if (i != TASKS_MAX) {
-        // Download task files
-        download_task(&task);
-        sprintf(buffer, "Downloaded task %d content.", task.id);
+    if (code != 200) {
+        sprintf(buffer, "Error requesting task.");
+        print_log(buffer);
+    } else {
+        sprintf(buffer, "Received task %d.", task.id);
         print_log(buffer);
 
-        // Validate files and put in execution
-        if (validate_task(&task)) {
-            sprintf(buffer, "Task %d downloaded correctly.", task.id);
-            print_log(buffer);
-            request_execution(&task, i);
-            sprintf(buffer, "Requested execution of task %d.", task.id);
-            print_log(buffer);
-            return 0;
-        } else {
-            sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);
-            print_log(buffer);
-            // Set task space status to inactive
-            pthread_mutex_lock(&tasks_lock);
-            tasks[i].active = 0;
-            pthread_mutex_unlock(&tasks_lock);
-            return -2;
+        // Save task
+        int i;
+        pthread_mutex_lock(&tasks_lock);
+        for (i = 0; i < TASKS_MAX; ++i) {
+            if (!tasks[i].active) {
+                tasks[i].id = task.id;
+                tasks[i].active = 1;
+                tasks[i].cpu_intensity = task.cpu_intensity;
+                tasks[i].com_intensity = task.com_intensity;
+                tasks[i].io_intensity = task.io_intensity;
+                strcpy(tasks[i].kernel, task.kernel);
+                strcpy(tasks[i].input, task.input);
+                strcpy(tasks[i].output, task.output);
+                strcpy(tasks[i].unpack, task.pack);
+                strcpy(tasks[i].kernel_md5, task.kernel_md5);
+                strcpy(tasks[i].input_md5, task.input_md5);
+                strcpy(tasks[i].unpack_md5, task.unpack_md5);
+                strcpy(tasks[i].pack_md5, task.pack_md5);
+                break;
+            }
         }
-    } else {
-        print_log("Error: Limit of tasks in execution has been reached.");
-        return -1;
+        pthread_mutex_unlock(&tasks_lock);
+
+        if (i != TASKS_MAX) {
+            // Download task files
+            download_task(&task);
+            sprintf(buffer, "Downloaded task %d content.", task.id);
+            print_log(buffer);
+
+            // Validate files and put in execution
+            if (validate_task(&task)) {
+                sprintf(buffer, "Task %d downloaded correctly.", task.id);
+                print_log(buffer);
+                request_execution(&task, i);
+                sprintf(buffer, "Requested execution of task %d.", task.id);
+                print_log(buffer);
+                return 0;
+            } else {
+                sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);
+                print_log(buffer);
+                // Set task space status to inactive
+                pthread_mutex_lock(&tasks_lock);
+                tasks[i].active = 0;
+                pthread_mutex_unlock(&tasks_lock);
+                return -2;
+            }
+        } else {
+            print_log("Error: Limit of tasks in execution has been reached.");
+            return -1;
+        }
     }
 }

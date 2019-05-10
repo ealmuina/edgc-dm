@@ -76,11 +76,10 @@ void download(const char *url, const char *filename) {
     curl_global_cleanup();
 }
 
-char *get(const char *url) {
+char *get(const char *url, long *code) {
     CURL *curl = NULL;
     CURLcode status;
     char *data = NULL;
-    long code;
 
     curl_global_init(CURL_GLOBAL_ALL);
     curl = curl_easy_init();
@@ -108,9 +107,9 @@ char *get(const char *url) {
         goto error;
     }
 
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
-    if (code != 200) {
-        fprintf(stderr, "error: server responded with code %ld\n", code);
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, code);
+    if (*code != 200) {
+        fprintf(stderr, "error: server responded with code %ld\n", *code);
         goto error;
     }
 

@@ -27,6 +27,7 @@
 struct task {
     char kernel[FIELD_SIZE], input[FIELD_SIZE], output[FIELD_SIZE], unpack[FIELD_SIZE], pack[FIELD_SIZE],
             kernel_md5[FIELD_SIZE], input_md5[FIELD_SIZE], unpack_md5[FIELD_SIZE], pack_md5[FIELD_SIZE];
+    int cpu_intensity, com_intensity, io_intensity;
     int id, active, flexmpi_id;
 };
 
@@ -34,7 +35,7 @@ struct task tasks[TASKS_MAX];
 
 void download_task(struct task *task);
 
-struct task get_task_info(int id);
+struct task get_task_info(int id, long *code);
 
 int validate_file(char *file, char *received_hash);
 

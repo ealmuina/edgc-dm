@@ -27,7 +27,7 @@ size_t write_response(void *ptr, size_t size, size_t nmemb, void *stream);
 
 void download(const char *url, const char *filename);
 
-char *get(const char *url);
+char *get(const char *url, long *code);
 
 char *post(const char *url, const char *data);
 
