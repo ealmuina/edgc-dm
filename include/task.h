@@ -21,8 +21,8 @@
 
 #define TASKS_MAX 1024
 #define FIELD_SIZE 1024
-#define SERVER_ADDR "http://localhost:5000"
-#define TASK_ADDR "http://localhost:5000/api/task"
+#define SERVER_ADDR "http://E550:5000"
+#define TASK_ADDR "http://E550:5000/api/task"
 
 struct task {
     char kernel[FIELD_SIZE], input[FIELD_SIZE], output[FIELD_SIZE], unpack[FIELD_SIZE], pack[FIELD_SIZE],
