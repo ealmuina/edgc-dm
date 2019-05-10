@@ -83,7 +83,7 @@ void request_execution(struct task *task, int task_index) {
 
     char command[1024];
     sprintf(command,
-            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:1:2.500000:2000:%s:%d\" %s",
+            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:1:2.500000:100:%s:%d\" %s",
             nodes[root_node].hostname,
             max_cores - 1,
             "> /dev/null 2> /dev/null"
