@@ -13,8 +13,14 @@ void update_processes(int node_index) {
     for (int i = 0; i < MAX_TASKS; ++i) {
         if (tasks[i].active) {
             total_processes += node->processes[i];
-            if (node->processes[i] > max_processes) max_task = i;
-            if (node->processes[i] < min_processes) min_task = i;
+            if (node->processes[i] > max_processes) {
+                max_processes = node->processes[i];
+                max_task = i;
+            }
+            if (node->processes[i] < min_processes) {
+                min_task = i;
+                min_processes = node->processes[i];
+            }
         }
     }
 
