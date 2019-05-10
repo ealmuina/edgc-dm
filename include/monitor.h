@@ -26,7 +26,6 @@ struct node {
     int active, cpus, processes[MAX_TASKS];
     float cpu_load;
     time_t last_seen;
-    in_addr_t addr;
 };
 
 struct node nodes[NODES_MAX];

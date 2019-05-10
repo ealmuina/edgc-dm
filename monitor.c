@@ -126,7 +126,7 @@ void *monitor_func(void *args) {
         pthread_mutex_lock(&monitor_lock);
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
-            if (nodes[i].active && nodes[i].addr == cli_addr.sin_addr.s_addr) {
+            if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
                 index = i; // found!
                 break;
             }
@@ -137,7 +137,6 @@ void *monitor_func(void *args) {
             strcpy(nodes[index].stats, stats);
             strcpy(nodes[index].hostname, hostname);
             nodes[index].last_seen = now;
-            nodes[index].addr = cli_addr.sin_addr.s_addr;
             nodes[index].cpu_load = cpu_load;
             nodes[index].cpus = cpus;
 
