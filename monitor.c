@@ -35,7 +35,7 @@ void update_processes(int node_index) {
     if (node->cpu_load > MAX_LOAD && total_processes) {
         // Kill a process from the task with the most
         node->processes[max_task]--;
-        sprintf(buffer, "Reduced load of task %d in node %d.", tasks[max_task].id, node_index);
+        sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[max_task].id, node->hostname);
         print_log(buffer);
 
         // Set delta of processes to -1
@@ -48,20 +48,18 @@ void update_processes(int node_index) {
         if (total_processes)
             process_load = node->cpu_load / total_processes;
         else
-            process_load = 0.5;
+            process_load = 0.25;
         float available_load = MAX_LOAD - node->cpu_load;
         int new_processes = (int) (available_load / process_load); // Estimation of new processes
 
         // Increase if new_processes > 0
         if (new_processes > 0) {
-            node->processes[min_task] += new_processes;
-
             // Set delta of processes to new_processes
             delta = (int) fmin(new_processes, node->cpus - total_processes);
             task = min_task;
 
-            sprintf(buffer, "Increased load in node %d for task %d by %d processes.", node_index, delta,
-                    tasks[task].id);
+            sprintf(buffer, "Increased load in node '%s' for task %d by %d processes.", node->hostname, tasks[task].id,
+                    delta);
             print_log(buffer);
         }
     }
@@ -80,7 +78,7 @@ void update_processes(int node_index) {
         node->processes[task] += delta;
         system(command);
     }
-    pthread_mutex_lock(&tasks_lock);
+    pthread_mutex_unlock(&tasks_lock);
 }
 
 void *monitor_func(void *args) {
@@ -105,8 +103,6 @@ void *monitor_func(void *args) {
         // Receive statistics from a node
         int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         buffer[n] = '\0';
-
-        if (!cli_addr.sin_addr.s_addr) continue; //skip if node address is 0
 
         // Get time for knowing last time the node was seen
         time_t now;
@@ -153,8 +149,8 @@ void *monitor_func(void *args) {
                 if (difftime(now, nodes[i].last_seen) > TIMEOUT)
                     nodes[i].active = 0;
             }
-            pthread_mutex_unlock(&monitor_lock);
         }
+        pthread_mutex_unlock(&monitor_lock);
 #pragma clang diagnostic pop
     }
 }
