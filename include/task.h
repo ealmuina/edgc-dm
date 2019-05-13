@@ -21,13 +21,11 @@
 
 #define TASKS_MAX 1024
 #define FIELD_SIZE 1024
-#define SERVER_ADDR "http://E550:5000"
-#define TASK_ADDR "http://E550:5000/api/task"
+#define TASK_URL "api/task"
 
 struct task {
     char kernel[FIELD_SIZE], input[FIELD_SIZE], output[FIELD_SIZE], unpack[FIELD_SIZE], pack[FIELD_SIZE],
             kernel_md5[FIELD_SIZE], input_md5[FIELD_SIZE], unpack_md5[FIELD_SIZE], pack_md5[FIELD_SIZE];
-    int cpu_intensity, com_intensity, io_intensity;
     int id, active, flexmpi_id;
 };
 

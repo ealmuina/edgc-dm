@@ -13,7 +13,7 @@
 #include "task.h"
 
 #define REPORT_PORT 9911
-#define REPORT_ADDR "http://E550:5000/api/report"
+#define REPORT_URL "api/report"
 
 pthread_mutex_t tasks_lock;
 

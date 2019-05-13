@@ -8,6 +8,9 @@
 #include <time.h>
 
 #define BUFFER_SIZE  (256 * 1024)  /* 256 KB */
+#define FIELD_SIZE 1024
+
+char repository_url[FIELD_SIZE];
 
 char *md5(const char *file_name);
 

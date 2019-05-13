@@ -16,8 +16,7 @@
 #include "include/report.h"
 #include "include/task.h"
 
-#define FIELD_SIZE 1024
-#define REGISTER_ADDR "http://E550:5000/api/register"
+#define REGISTER_URL "api/register"
 
 char big_buffer[FIELD_SIZE * BUFFER_SIZE];
 
@@ -38,7 +37,10 @@ int register_domain() {
     else
         strcat(big_buffer, "]");
 
-    char *text = post(REGISTER_ADDR, big_buffer);
+    char register_addr[FIELD_SIZE];
+    sprintf(register_addr, "%s/%s", repository_url, REGISTER_URL);
+
+    char *text = post(register_addr, big_buffer);
     json_t *root = json_loads(text, 0, NULL);
     int id = json_integer_value(json_object_get(root, "id"));
 
@@ -47,9 +49,18 @@ int register_domain() {
     return id;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     int max_tasks = 1;
     char buffer[BUFFER_SIZE];
+
+    if (argc != 2) {
+        printf("Usage edgc-dm <repository_url>");
+        return -1;
+    }
+    if (strncmp("http://", argv[1], 7) == 0)
+        sprintf(repository_url, "%s", argv[1]);
+    else
+        sprintf(repository_url, "http://%s", argv[1]);
 
     // Initialize monitor and wait for nodes to report their statistics
     start_monitor();

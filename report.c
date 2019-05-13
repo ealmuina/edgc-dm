@@ -1,7 +1,7 @@
 #include "include/report.h"
 
 void *report_func(void *args) {
-    char buffer[BUFFER_SIZE];
+    char buffer[FIELD_SIZE];
     int domain_id = *(int *) args;
     int sockfd, len;
     struct sockaddr_in serv_addr, cli_addr;
@@ -20,7 +20,7 @@ void *report_func(void *args) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
-        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+        int n = recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         int id = atoi(buffer);
 
         // Find task index
@@ -32,8 +32,7 @@ void *report_func(void *args) {
         }
         // Report task and set it to inactive
         system(tasks[index].pack);
-        char buffer[BUFFER_SIZE];
-        sprintf(buffer, "%s?taskId=%d&domainId=%d", REPORT_ADDR, tasks[index].id, domain_id);
+        sprintf(buffer, "%s/%s?taskId=%d&domainId=%d", repository_url, REPORT_URL, tasks[index].id, domain_id);
         upload(buffer, tasks[index].output);
         tasks[index].active = 0;
         // Report to log

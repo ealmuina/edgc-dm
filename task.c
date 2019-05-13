@@ -5,22 +5,22 @@ int FLEXMPI_ID = 0;
 void download_task(struct task *task) {
     char buffer[BUFFER_SIZE];
 
-    sprintf(buffer, "%s/%s", SERVER_ADDR, task->kernel);
+    sprintf(buffer, "%s/%s", repository_url, task->kernel);
     download(buffer, task->kernel);
 
-    sprintf(buffer, "%s/%s", SERVER_ADDR, task->input);
+    sprintf(buffer, "%s/%s", repository_url, task->input);
     download(buffer, task->input);
 
-    sprintf(buffer, "%s/%s", SERVER_ADDR, task->unpack);
+    sprintf(buffer, "%s/%s", repository_url, task->unpack);
     download(buffer, task->unpack);
 
-    sprintf(buffer, "%s/%s", SERVER_ADDR, task->pack);
+    sprintf(buffer, "%s/%s", repository_url, task->pack);
     download(buffer, task->pack);
 }
 
 struct task get_task_info(int id, long *code) {
-    char url[BUFFER_SIZE];
-    sprintf(url, "%s?domainId=%d", TASK_ADDR, id);
+    char url[FIELD_SIZE];
+    sprintf(url, "%s/%s?domainId=%d", repository_url, TASK_URL, id);
 
     char *text = get(url, code);
     struct task task;
@@ -31,9 +31,6 @@ struct task get_task_info(int id, long *code) {
     json_t *root = json_loads(text, 0, NULL);
 
     task.id = json_integer_value(json_object_get(root, "id"));
-    task.cpu_intensity = json_integer_value(json_object_get(root, "cpu_intensity"));
-    task.com_intensity = json_integer_value(json_object_get(root, "com_intensity"));
-    task.io_intensity = json_integer_value(json_object_get(root, "io_intensity"));
 
     strcpy(task.kernel, json_string_value(json_object_get(root, "kernel")));
     strcpy(task.input, json_string_value(json_object_get(root, "input")));
@@ -89,12 +86,9 @@ void request_execution(struct task *task, int task_index) {
     // Set the number of processes used in the root node
     nodes[root_node].processes[task_index] = max_cores;
 
-    char command[1024];
+    char command[FIELD_SIZE];
     sprintf(command,
-            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:%d:%d:%d:2.500000:100:%s:%d\" %s",
-            task->cpu_intensity,
-            task->com_intensity,
-            task->io_intensity,
+            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:0:2.500000:100:%s:%d\" %s",
             nodes[root_node].hostname,
             max_cores,
             "> /dev/null 2> /dev/null"
@@ -126,9 +120,6 @@ int process_task(int id) {
             if (!tasks[i].active) {
                 tasks[i].id = task.id;
                 tasks[i].active = 1;
-                tasks[i].cpu_intensity = task.cpu_intensity;
-                tasks[i].com_intensity = task.com_intensity;
-                tasks[i].io_intensity = task.io_intensity;
                 strcpy(tasks[i].kernel, task.kernel);
                 strcpy(tasks[i].input, task.input);
                 strcpy(tasks[i].output, task.output);
