@@ -11,7 +11,7 @@ add_executable(edgc-dm
         report.c include/report.h
         task.c include/task.h)
 
-target_include_directories(edgc-dm PRIVATE $HOME/.local)
+target_include_directories(edgc-dm PRIVATE $ENV{HOME}/.local)
 
 target_link_libraries(edgc-dm jansson)
 target_link_libraries(edgc-dm curl)
