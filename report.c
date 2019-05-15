@@ -17,6 +17,8 @@ void *report_func(void *args) {
 
     bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 
+    print_log("Report thread initialized.");
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
