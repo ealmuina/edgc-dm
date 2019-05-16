@@ -137,6 +137,11 @@ void *monitor_func(void *args) {
         }
         // Update or create entry
         if (index != NODES_MAX) { // There is still space for this node
+            if (nodes[index].active == 0) {
+                sprintf(buffer, "Detected node '%s'.", hostname);
+                print_log(buffer);
+            }
+
             nodes[index].active = 1;
             strcpy(nodes[index].stats, stats);
             strcpy(nodes[index].hostname, hostname);
@@ -148,8 +153,12 @@ void *monitor_func(void *args) {
             update_processes(index);
             // Remove nodes that have not been seen in a while
             for (int i = 0; i < NODES_MAX; ++i) {
-                if (difftime(now, nodes[i].last_seen) > TIMEOUT)
+                if (difftime(now, nodes[i].last_seen) > TIMEOUT) {
                     nodes[i].active = 0;
+                    sprintf(buffer, "Node '%s' inactive for %d seconds. It will be removed.", nodes[i].hostname,
+                            TIMEOUT);
+                    print_log(buffer);
+                }
             }
         }
         pthread_mutex_unlock(&monitor_lock);
