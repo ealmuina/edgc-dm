@@ -153,7 +153,7 @@ void *monitor_func(void *args) {
             update_processes(index);
             // Remove nodes that have not been seen in a while
             for (int i = 0; i < NODES_MAX; ++i) {
-                if (difftime(now, nodes[i].last_seen) > TIMEOUT) {
+                if (nodes[i].active && difftime(now, nodes[i].last_seen) > TIMEOUT) {
                     nodes[i].active = 0;
                     sprintf(buffer, "Node '%s' inactive for %d seconds. It will be removed.", nodes[i].hostname,
                             TIMEOUT);
