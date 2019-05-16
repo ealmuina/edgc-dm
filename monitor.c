@@ -155,7 +155,7 @@ void *monitor_func(void *args) {
             for (int i = 0; i < NODES_MAX; ++i) {
                 if (nodes[i].active && difftime(now, nodes[i].last_seen) > TIMEOUT) {
                     nodes[i].active = 0;
-                    sprintf(buffer, "Node '%s' inactive for %d seconds. It will be removed.", nodes[i].hostname,
+                    sprintf(buffer, "Removed node '%s' after being inactive for %d seconds.", nodes[i].hostname,
                             TIMEOUT);
                     print_log(buffer);
                 }
