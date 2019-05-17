@@ -87,11 +87,11 @@ void *monitor_func(void *args) {
     char buffer[BUFFER_SIZE];
     struct sockaddr_in serv_addr, cli_addr;
 
-    sockfd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    int broadcastEnable = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));
+    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    memset(&cli_addr, 0, sizeof(cli_addr));
+
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(MONITOR_PORT);
