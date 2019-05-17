@@ -59,7 +59,13 @@ int validate_file(char *file, char *received_hash) {
 
 int validate_task(struct task *task) {
     int kernel = validate_file(task->kernel, task->kernel_md5);
-    int input = validate_file(task->input, task->input_md5);
+
+    int input;
+    if (strcmp("", task->input) == 0)
+        input = 1;
+    else
+        input = validate_file(task->input, task->input_md5);
+
     int unpack = validate_file(task->unpack, task->unpack_md5);
     int pack = validate_file(task->pack, task->pack_md5);
 
@@ -69,7 +75,11 @@ int validate_task(struct task *task) {
 void request_execution(struct task *task, int task_index) {
     int root_node = 0, max_cores = -1;
 
-    pthread_mutex_lock(&monitor_lock);
+    // Execute unpacking script
+    system(task->unpack);
+
+    // Find the best node for starting execution in it
+    pthread_mutex_lock(&nodes_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             // Cores to be used will be the CPUs * free_fraction_of_load
@@ -84,16 +94,17 @@ void request_execution(struct task *task, int task_index) {
     }
 
     // Set the number of processes used in the root node
-    nodes[root_node].processes[task_index] = max_cores;
+    nodes[root_node].processes[task_index] = ROOT_PROCESSES;
+    nodes[root_node].root_task[task_index] = 1;
 
     char command[FIELD_SIZE];
     sprintf(command,
             "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:5000:2:1:0:2.500000:100:%s:%d\" %s",
             nodes[root_node].hostname,
-            max_cores,
+            nodes[root_node].processes[task_index],
             "> /dev/null 2> /dev/null"
     );
-    pthread_mutex_unlock(&monitor_lock);
+    pthread_mutex_unlock(&nodes_lock);
 
     printf("\t-> %s\n", command);
     system(command);

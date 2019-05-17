@@ -11,7 +11,8 @@ void update_processes(int node_index) {
     int total_processes = 0, min_processes = INT32_MAX, max_processes = INT32_MIN;
     int min_task = -1, max_task = -1;
     for (int i = 0; i < MAX_TASKS; ++i) {
-        if (tasks[i].active) {
+        // Consider only active tasks if non-root or root with more processes than the starting ones
+        if (tasks[i].active && (!node->root_task[i] || node->processes[i] > ROOT_PROCESSES)) {
             total_processes += node->processes[i];
             if (node->processes[i] > max_processes) {
                 max_processes = node->processes[i];
@@ -127,7 +128,7 @@ void *monitor_func(void *args) {
 
         // Search node in the list
         int index = 0;
-        pthread_mutex_lock(&monitor_lock);
+        pthread_mutex_lock(&nodes_lock);
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
@@ -140,6 +141,9 @@ void *monitor_func(void *args) {
             if (nodes[index].active == 0) {
                 sprintf(buffer, "Detected node '%s'.", hostname);
                 print_log(buffer);
+                // Reset information regarding tasks
+                memset(nodes[index].processes, 0, sizeof(nodes[index].processes));
+                memset(nodes[index].root_task, 0, sizeof(nodes[index].root_task));
             }
 
             nodes[index].active = 1;
@@ -161,13 +165,13 @@ void *monitor_func(void *args) {
                 }
             }
         }
-        pthread_mutex_unlock(&monitor_lock);
+        pthread_mutex_unlock(&nodes_lock);
 #pragma clang diagnostic pop
     }
 }
 
 void start_monitor() {
-    pthread_mutex_init(&monitor_lock, NULL);
+    pthread_mutex_init(&nodes_lock, NULL);
     pthread_t m;
     pthread_create(&m, NULL, monitor_func, NULL);
 }

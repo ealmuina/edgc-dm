@@ -21,6 +21,7 @@
 
 #define TASKS_MAX 1024
 #define FIELD_SIZE 1024
+#define ROOT_PROCESSES 2
 #define TASK_URL "api/task"
 
 struct task {

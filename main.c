@@ -23,14 +23,14 @@ char big_buffer[FIELD_SIZE * BUFFER_SIZE];
 int register_domain() {
     big_buffer[0] = '[';
 
-    pthread_mutex_lock(&monitor_lock);
+    pthread_mutex_lock(&nodes_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             strcat(big_buffer, nodes[i].stats);
             strcat(big_buffer, ",");
         }
     }
-    pthread_mutex_unlock(&monitor_lock);
+    pthread_mutex_unlock(&nodes_lock);
     int len = strlen(big_buffer);
     if (big_buffer[len - 1] == ',')
         big_buffer[len - 1] = ']';

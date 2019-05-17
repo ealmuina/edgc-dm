@@ -23,13 +23,15 @@
 
 struct node {
     char stats[BUFFER_SIZE], hostname[NAME_LENGTH_MAX];
-    int active, cpus, processes[MAX_TASKS];
+    int active, cpus;
+    int processes[MAX_TASKS]; // stores the number of processes each task has currently running in the node
+    int root_task[MAX_TASKS]; // indicates for each task whether the node is its root or not
     float cpu_load;
     time_t last_seen;
 };
 
 struct node nodes[NODES_MAX];
-pthread_mutex_t monitor_lock;
+pthread_mutex_t nodes_lock;
 
 void update_processes(int node_index);
 
