@@ -13,9 +13,13 @@ void download_task(struct task *task) {
 
     sprintf(buffer, "%s/%s", repository_url, task->unpack);
     download(buffer, task->unpack);
+    sprintf(buffer, "chmod +x %s", task->unpack);
+    system(buffer);
 
     sprintf(buffer, "%s/%s", repository_url, task->pack);
     download(buffer, task->pack);
+    sprintf(buffer, "chmod +x %s", task->pack);
+    system(buffer);
 }
 
 struct task get_task_info(int id, long *code) {
