@@ -11,10 +11,14 @@ void update_processes(int node_index) {
     int total_processes = 0, min_processes = INT32_MAX, max_processes = INT32_MIN;
     int min_task = -1, max_task = -1;
     for (int i = 0; i < MAX_TASKS; ++i) {
-        // Consider only active tasks if non-root or root with more processes than the starting ones
-        if (tasks[i].active && (!node->root_task[i] || node->processes[i] > ROOT_PROCESSES)) {
+        // Consider only active tasks
+        if (tasks[i].active) {
             total_processes += node->processes[i];
-            if (node->processes[i] > max_processes) {
+            /* Task with the most processes will only be used to decrease them if necessary
+             * The number of processes on root hosts cannot be below its initial value
+             * -> So tasks will only be taken into into account for this variable only if the node is non-root for them
+             *    or they have more processes than when beginning */
+            if (node->processes[i] > max_processes && (!node->root_task[i] || node->processes[i] > ROOT_PROCESSES)) {
                 max_processes = node->processes[i];
                 max_task = i;
             }
