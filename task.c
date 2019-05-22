@@ -89,8 +89,14 @@ void request_execution(struct task *task, int task_index) {
             // Cores to be used will be the CPUs * free_fraction_of_load
             int cores = (int) roundf(nodes[i].cpus * fmax(0, 1 - nodes[i].cpu_load + LOAD_EPSILON));
 
+            // Read name of localhost to avoid starting applications in it
+            char hostname[FIELD_SIZE];
+            FILE *file = fopen("/etc/hostname", "r");
+            fread(hostname, sizeof(char), FIELD_SIZE, file);
+            fclose(file);
+
             // Root node will be the one with the most cores
-            if (cores > max_cores) {
+            if (cores > max_cores && strcmp(hostname, nodes[i].hostname) != 0) {
                 root_node = i;
                 max_cores = cores;
             }
