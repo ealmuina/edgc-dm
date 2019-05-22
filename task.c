@@ -92,7 +92,8 @@ void request_execution(struct task *task, int task_index) {
             // Read name of localhost to avoid starting applications in it
             char hostname[FIELD_SIZE];
             FILE *file = fopen("/etc/hostname", "r");
-            fread(hostname, sizeof(char), FIELD_SIZE, file);
+            int len = fread(hostname, sizeof(char), FIELD_SIZE, file);
+            hostname[len - 1] = 0;
             fclose(file);
 
             // Root node will be the one with the most cores
