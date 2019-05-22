@@ -71,6 +71,7 @@ void update_processes(int node_index) {
 
     // Send signal to modify the number of processes
     if (delta) {
+        sleep(10); // wait 10 seconds to let FlexMPI controller process previous commands
         char command[1024];
         sprintf(command,
                 "nping --udp -p 8900 -c 1 localhost --data-string \"%d 0 6:%s:%d\" %s",
