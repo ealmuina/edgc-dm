@@ -38,13 +38,10 @@ void update_processes(int node_index) {
     int delta = 0, task = -1;
     // Check if load needs to be reduced
     if (node->cpu_load > MAX_LOAD && total_processes) {
-        // Kill a process from the task with the most
-        node->processes[max_task]--;
-        sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[max_task].id, node->hostname);
-        print_log(buffer);
+        float process_load = node->cpu_load / total_processes;
 
-        // Set delta of processes to -1
-        delta = -1;
+        // Set delta to the number of processes above the maximum allowed load
+        delta = -(int) (node->processes[max_task] - (MAX_LOAD - LOAD_EPSILON) / process_load);
         task = max_task;
     }
         // Check if load could be increased
@@ -62,27 +59,29 @@ void update_processes(int node_index) {
             // Set delta of processes to new_processes
             delta = (int) fmin(new_processes, node->cpus - total_processes);
             task = min_task;
-
-            sprintf(buffer, "Increased load in node '%s' for task %d by %d processes.", node->hostname, tasks[task].id,
-                    delta);
-            print_log(buffer);
         }
     }
 
     // Send signal to modify the number of processes
     if (delta) {
         sleep(10); // wait 10 seconds to let FlexMPI controller process previous commands
-        char command[1024];
-        sprintf(command,
+        if (delta < 0)
+            sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[max_task].id, node->hostname);
+        else
+            sprintf(buffer, "Increased load in node '%s' for task %d by %d processes.", node->hostname, tasks[task].id,
+                    delta);
+        print_log(buffer);
+
+        sprintf(buffer,
                 "nping --udp -p 8900 -c 1 localhost --data-string \"%d 0 6:%s:%d\" %s",
                 tasks[task].flexmpi_id,
                 node->hostname,
                 delta,
                 "> /dev/null 2> /dev/null"
         );
-        printf("\t-> %s\n", command);
+        printf("\t-> %s\n", buffer);
         node->processes[task] += delta;
-        system(command);
+        system(buffer);
     }
     pthread_mutex_unlock(&tasks_lock);
 }
