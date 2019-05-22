@@ -64,7 +64,7 @@ void update_processes(int node_index) {
 
     // Send signal to modify the number of processes
     if (delta) {
-        sleep(10); // wait 10 seconds to let FlexMPI controller process previous commands
+        sleep(20); // wait 20 seconds to let FlexMPI controller process previous commands
         if (delta < 0)
             sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[max_task].id, node->hostname);
         else
