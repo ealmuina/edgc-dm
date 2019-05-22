@@ -138,7 +138,8 @@ int process_task(int id) {
                 strcpy(tasks[i].kernel, task.kernel);
                 strcpy(tasks[i].input, task.input);
                 strcpy(tasks[i].output, task.output);
-                strcpy(tasks[i].unpack, task.pack);
+                strcpy(tasks[i].pack, task.pack);
+                strcpy(tasks[i].unpack, task.unpack);
                 strcpy(tasks[i].kernel_md5, task.kernel_md5);
                 strcpy(tasks[i].input_md5, task.input_md5);
                 strcpy(tasks[i].unpack_md5, task.unpack_md5);
