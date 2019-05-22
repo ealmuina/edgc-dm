@@ -104,9 +104,12 @@ void request_execution(struct task *task, int task_index) {
         }
     }
 
-    // Set the number of processes used in the root node
+    // Set the number of processes used in the root node and activate task
     nodes[root_node].processes[task_index] = ROOT_PROCESSES;
     nodes[root_node].root_task[task_index] = 1;
+    pthread_mutex_lock(&tasks_lock);
+    tasks[task_index].active = 1;
+    pthread_mutex_unlock(&tasks_lock);
 
     char command[FIELD_SIZE];
     sprintf(command,
@@ -115,10 +118,10 @@ void request_execution(struct task *task, int task_index) {
             nodes[root_node].processes[task_index],
             "> /dev/null 2> /dev/null"
     );
-    pthread_mutex_unlock(&nodes_lock);
-
     printf("\t-> %s\n", command);
     system(command);
+
+    pthread_mutex_unlock(&nodes_lock);
 }
 
 int process_task(int id) {
@@ -141,7 +144,6 @@ int process_task(int id) {
         for (i = 0; i < TASKS_MAX; ++i) {
             if (!tasks[i].active) {
                 tasks[i].id = task.id;
-                tasks[i].active = 1;
                 strcpy(tasks[i].kernel, task.kernel);
                 strcpy(tasks[i].input, task.input);
                 strcpy(tasks[i].output, task.output);
