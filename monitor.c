@@ -41,7 +41,7 @@ void update_processes(int node_index) {
         float process_load = node->cpu_load / total_processes;
 
         // Set delta to the number of processes above the maximum allowed load
-        delta = -(int) (node->processes[max_task] - (MAX_LOAD - LOAD_EPSILON) / process_load);
+        delta = -(int) (node->processes[max_task] - MAX_LOAD / process_load);
         task = max_task;
     }
         // Check if load could be increased
