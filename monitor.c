@@ -51,7 +51,7 @@ void update_processes(int node_index) {
             process_load = node->cpu_load / total_processes;
         else
             process_load = 0.25;
-        float available_load = MAX_LOAD - node->cpu_load;
+        float available_load = MAX_LOAD - LOAD_EPSILON - node->cpu_load;
         int new_processes = (int) (available_load / process_load); // Estimation of new processes
 
         // Increase if new_processes > 0

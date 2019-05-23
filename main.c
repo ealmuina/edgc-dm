@@ -69,9 +69,7 @@ int main(int argc, char *argv[]) {
     sleep(65); // wait to receive nodes data first
 
     // Register domain in repository
-    int id = 0;
-    while (!id)
-        id = register_domain();
+    int id = register_domain();
     sprintf(buffer, "Registered with id: %d", id);
     print_log(buffer);
 
