@@ -47,8 +47,6 @@ struct task get_task_info(int id, long *code) {
     strcpy(task.unpack_md5, json_string_value(json_object_get(root, "unpack_md5")));
     strcpy(task.pack_md5, json_string_value(json_object_get(root, "pack_md5")));
 
-    task.flexmpi_id = FLEXMPI_ID++;
-
     json_decref(root);
     free(text);
     return task;
@@ -104,13 +102,17 @@ void request_execution(struct task *task, int task_index) {
         }
     }
 
-    // Set the number of processes used in the root node and activate task
+    // Set the number of processes used in the root node
     nodes[root_node].processes[task_index] = ROOT_PROCESSES;
     nodes[root_node].root_task[task_index] = 1;
+
+    // Activate task and set its flexmpi_id
     pthread_mutex_lock(&tasks_lock);
-    tasks[task_index].active = 1;
+    tasks[task_index].active = task->active = 1;
+    tasks[task_index].flexmpi_id = task->flexmpi_id = FLEXMPI_ID++;
     pthread_mutex_unlock(&tasks_lock);
 
+    // Send command to start application
     char command[FIELD_SIZE];
     sprintf(command,
             "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:20000:2:1:0:2.500000:10000:%s:%d\" %s",
@@ -120,6 +122,13 @@ void request_execution(struct task *task, int task_index) {
     );
     printf("\t-> %s\n", command);
     system(command);
+
+    // Wait FLEXMPI_INTERVAL and send command to load kernel
+    sleep(FLEXMPI_INTERVAL);
+    sprintf(command,
+            "nping --udp -p 8900 -c 1 localhost --data-string \"%d 1 iocmd:5\"",
+            task->flexmpi_id
+    );
 
     pthread_mutex_unlock(&nodes_lock);
 }
