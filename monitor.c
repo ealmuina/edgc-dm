@@ -143,8 +143,9 @@ void *monitor_func(void *args) {
         // Update or create entry
         if (index != NODES_MAX) { // There is still space for this node
             if (nodes[index].active == 0) {
-                sprintf(buffer, "Detected node '%s'.", hostname);
-                print_log(buffer);
+                char info[FIELD_SIZE];
+                sprintf(info, "Detected node '%s'.", hostname);
+                print_log(info);
                 // Reset information regarding tasks
                 memset(nodes[index].processes, 0, sizeof(nodes[index].processes));
                 memset(nodes[index].root_task, 0, sizeof(nodes[index].root_task));
