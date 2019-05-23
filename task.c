@@ -129,6 +129,8 @@ void request_execution(struct task *task, int task_index) {
             "nping --udp -p 8900 -c 1 localhost --data-string \"%d 1 iocmd:5\"",
             task->flexmpi_id
     );
+    printf("\t-> %s\n", command);
+    system(command);
 
     pthread_mutex_unlock(&nodes_lock);
 }
