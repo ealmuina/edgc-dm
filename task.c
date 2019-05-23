@@ -126,8 +126,9 @@ void request_execution(struct task *task, int task_index) {
     // Wait FLEXMPI_INTERVAL and send command to load kernel
     sleep(FLEXMPI_INTERVAL);
     sprintf(command,
-            "nping --udp -p 8900 -c 1 localhost --data-string \"%d 1 iocmd:5\"",
-            task->flexmpi_id
+            "nping --udp -p 8900 -c 1 localhost --data-string \"%d 1 iocmd:5\" %s",
+            task->flexmpi_id,
+            "> /dev/null 2> /dev/null"
     );
     printf("\t-> %s\n", command);
     system(command);
