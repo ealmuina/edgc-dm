@@ -64,7 +64,6 @@ void update_processes(int node_index) {
 
     // Send signal to modify the number of processes
     if (delta) {
-        sleep(FLEXMPI_INTERVAL); // wait FLEXMPI_INTERVAL seconds to let FlexMPI controller process previous commands
         if (delta < 0)
             sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[max_task].id, node->hostname);
         else
@@ -82,6 +81,7 @@ void update_processes(int node_index) {
         printf("\t-> %s\n", buffer);
         node->processes[task] += delta;
         system(buffer);
+        sleep(FLEXMPI_INTERVAL);
     }
     pthread_mutex_unlock(&tasks_lock);
 }
