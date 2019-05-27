@@ -13,7 +13,7 @@
 
 #include "utils.h"
 
-#define TIMEOUT 180
+#define TIMEOUT 600
 #define NODES_MAX 1024
 #define NAME_LENGTH_MAX 512
 #define MONITOR_PORT 9910
