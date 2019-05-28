@@ -1,4 +1,3 @@
-#include <netdb.h>
 #include "include/monitor.h"
 #include "include/report.h"
 
