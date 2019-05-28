@@ -32,3 +32,12 @@ void print_log(char *msg) {
     char *time = strtok(ctime(&rawtime), "\n");
     printf("[%s] %s\n", time, msg);
 }
+
+void send_controller_instruction(char *instr, int report) {
+    char buffer[FIELD_SIZE];
+    sprintf(buffer, "nping --udp -p 8900 -c 1 localhost --data-string \"%s\" > /dev/null 2> /dev/null", instr);
+    if (report)
+        printf("\t-> %s\n", buffer);
+    system(buffer);
+    sleep(FLEXMPI_INTERVAL);
+}

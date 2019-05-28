@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
 
     // Initialize monitor and wait for nodes to report their statistics
     start_monitor();
-    print_log("Program will wait 60 seconds for recovering nodes data");
+    print_log("Program will wait 30 seconds for recovering nodes data");
     fflush(stdout);
-    sleep(60); // wait to receive nodes data first
+    sleep(30); // wait to receive nodes data first
 
     // Register domain in repository
     int id = register_domain();

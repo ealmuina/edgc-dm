@@ -17,6 +17,7 @@
 #define NODES_MAX 1024
 #define NAME_LENGTH_MAX 512
 #define MONITOR_PORT 9910
+#define CONTROLLER_PORT 9912
 #define LOAD_EPSILON 0.1
 #define MAX_LOAD 0.9
 #define MAX_TASKS 1024
@@ -32,6 +33,10 @@ struct node {
 
 struct node nodes[NODES_MAX];
 pthread_mutex_t nodes_lock;
+
+void initialize_socket(int *sockfd, int port);
+
+int calculate_adjustment(struct node *node, int *task);
 
 void update_processes(int node_index);
 

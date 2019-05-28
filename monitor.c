@@ -1,12 +1,23 @@
 #include "include/monitor.h"
 #include "include/report.h"
 
-void update_processes(int node_index) {
-    char buffer[BUFFER_SIZE];
-    struct node *node = &nodes[node_index];
+int controller_sockfd;
 
-    pthread_mutex_lock(&tasks_lock);
+void initialize_socket(int *sockfd, int port) {
+    struct sockaddr_in serv_addr;
 
+    *sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+    memset(&serv_addr, 0, sizeof(serv_addr));
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(port);
+
+    bind(*sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+}
+
+int calculate_adjustment(struct node *node, int *task) {
     // Get the total, max and min of processes
     int total_processes = 0, min_processes = INT32_MAX, max_processes = INT32_MIN;
     int min_task = -1, max_task = -1;
@@ -32,17 +43,18 @@ void update_processes(int node_index) {
     // Return if the min_task = -1 --> No active tasks in the system
     if (min_task == -1) {
         pthread_mutex_unlock(&tasks_lock);
-        return;
+        return 0;
     }
 
-    int delta = 0, task = -1;
+    int delta = 0;
+
     // Check if load needs to be reduced
     if (node->cpu_load > MAX_LOAD && total_processes) {
         float process_load = node->cpu_load / total_processes;
 
         // Set delta to the number of processes above the maximum allowed load
         delta = -(int) (node->processes[max_task] - MAX_LOAD / process_load);
-        task = max_task;
+        *task = max_task;
     }
         // Check if load could be increased
     else if (total_processes < node->cpus) {
@@ -58,49 +70,74 @@ void update_processes(int node_index) {
         if (new_processes > 0) {
             // Set delta of processes to new_processes
             delta = (int) fmin(new_processes, node->cpus - total_processes);
-            task = min_task;
+            *task = min_task;
         }
     }
 
+    return delta;
+}
+
+void update_processes(int node_index) {
+    char buffer[BUFFER_SIZE];
+    struct node *node = &nodes[node_index];
+
+    pthread_mutex_lock(&tasks_lock);
+    int delta, task;
+    delta = calculate_adjustment(node, &task);
+
     // Send signal to modify the number of processes
     if (delta) {
+        // Activate monitoring in FlexMPI controller
+        sprintf(buffer, "%d 4:on", tasks[task].flexmpi_id);
+        send_controller_instruction(buffer, 0);
+
+        // Send instruction to change processes
+        sprintf(buffer, "%d 0 6:%s:%d", tasks[task].flexmpi_id, node->hostname, delta);
+        send_controller_instruction(buffer, 1);
+        node->processes[task] += delta;
+
+        // Check until changes are done
+        int diff = 1, task_processes = 0;
+        for (int i = 0; i < NODES_MAX; ++i) {
+            if (nodes[i].active)
+                task_processes += nodes[i].processes[task]; // Store in task_processes its total number of processes
+        }
+        while (diff) {
+            // Keep trying until the number of processes is synchronized with FlexMPI
+            sprintf(buffer, "%d 2", tasks[task].flexmpi_id);
+            send_controller_instruction(buffer, 0);
+
+            socklen_t len;
+            struct sockaddr_in cli_addr;
+            int n = recvfrom(controller_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+            char *saveptr, *procs;
+            strtok_r(buffer, " ", &saveptr);
+            procs = strtok_r(NULL, " ", &saveptr);
+
+            diff = task_processes - atoi(procs);
+        }
+        // Deactivate monitoring in FlexMPI controller
+        sprintf(buffer, "%d 4:off", tasks[task].flexmpi_id);
+        send_controller_instruction(buffer, 0);
+
         if (delta < 0)
-            sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[max_task].id, node->hostname);
+            sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[task].id, node->hostname);
         else
             sprintf(buffer, "Increased load in node '%s' for task %d by %d processes.", node->hostname, tasks[task].id,
                     delta);
         print_log(buffer);
-
-        sprintf(buffer,
-                "nping --udp -p 8900 -c 1 localhost --data-string \"%d 0 6:%s:%d\" %s",
-                tasks[task].flexmpi_id,
-                node->hostname,
-                delta,
-                "> /dev/null 2> /dev/null"
-        );
-        printf("\t-> %s\n", buffer);
-        node->processes[task] += delta;
-        system(buffer);
-        sleep(FLEXMPI_INTERVAL);
     }
     pthread_mutex_unlock(&tasks_lock);
 }
 
 void *monitor_func(void *args) {
-    int sockfd, len;
+    int monitor_sockfd;
+    socklen_t len;
     char buffer[BUFFER_SIZE];
-    struct sockaddr_in serv_addr, cli_addr;
+    struct sockaddr_in cli_addr;
 
-    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    memset(&cli_addr, 0, sizeof(cli_addr));
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(MONITOR_PORT);
-
-    bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+    initialize_socket(&monitor_sockfd, MONITOR_PORT);
+    initialize_socket(&controller_sockfd, CONTROLLER_PORT);
 
     print_log("Monitor thread initialized.");
 
@@ -108,7 +145,7 @@ void *monitor_func(void *args) {
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
         // Receive statistics from a node
-        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+        int n = recvfrom(monitor_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         buffer[n] = '\0';
 
         // Get time for knowing last time the node was seen
@@ -118,9 +155,9 @@ void *monitor_func(void *args) {
         // Extract hostname from received data
         char hostname[NAME_LENGTH_MAX];
         strcpy(hostname, buffer);
-        len = strlen(hostname);
-        hostname[len] = 0;
-        char *stats = buffer + len + 1;
+        int slen = strlen(hostname);
+        hostname[slen] = 0;
+        char *stats = buffer + slen + 1;
 
         // Extract loadavg from received data
         float cpu_load = *(float *) stats;

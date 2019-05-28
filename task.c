@@ -115,24 +115,15 @@ void request_execution(struct task *task, int task_index) {
     // Send command to start application
     char command[FIELD_SIZE];
     sprintf(command,
-            "nping --udp -p 8900 -c 1 localhost --data-string \"-1 dynamic:20000:2:1:0:2.500000:10000:%s:%d\" %s",
+            "-1 dynamic:20000:2:1:0:2.500000:10000:%s:%d",
             nodes[root_node].hostname,
-            nodes[root_node].processes[task_index],
-            "> /dev/null 2> /dev/null"
+            nodes[root_node].processes[task_index]
     );
-    printf("\t-> %s\n", command);
-    system(command);
-    sleep(FLEXMPI_INTERVAL);
+    send_controller_instruction(command, 1);
 
     // Send command to load kernel
-    sprintf(command,
-            "nping --udp -p 8900 -c 1 localhost --data-string \"%d 1 iocmd:5\" %s",
-            task->flexmpi_id,
-            "> /dev/null 2> /dev/null"
-    );
-    printf("\t-> %s\n", command);
-    system(command);
-    sleep(FLEXMPI_INTERVAL);
+    sprintf(command, "%d 1 iocmd:5", task->flexmpi_id);
+    send_controller_instruction(command, 1);
 
     pthread_mutex_unlock(&nodes_lock);
 }
