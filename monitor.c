@@ -155,7 +155,7 @@ void request_full_info(int node_index) {
     char buffer[BUFFER_SIZE];
     int total = 0;
     while (total < BUFFER_SIZE) {
-        int n = read(sockfd, buffer + total, BUFFER_SIZE);
+        int n = read(sockfd, buffer + total, FIELD_SIZE);
         total += n;
     }
 
