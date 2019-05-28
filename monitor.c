@@ -153,7 +153,7 @@ void request_full_info(int node_index) {
 
     // Receive information
     char buffer[BUFFER_SIZE];
-    recv(sockfd, buffer, BUFFER_SIZE, 0);
+    read(sockfd, buffer, BUFFER_SIZE);
 
     // Extract number of processors from received data
     int cpus = *(int *) buffer;
