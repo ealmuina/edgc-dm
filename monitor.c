@@ -1,3 +1,4 @@
+#include <netdb.h>
 #include "include/monitor.h"
 #include "include/report.h"
 
@@ -134,15 +135,19 @@ void request_full_info(int node_index) {
     int sockfd;
     struct sockaddr_in servaddr;
     struct node *node = &nodes[node_index];
+    struct hostent *he;
 
     // socket create
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     bzero(&servaddr, sizeof(servaddr));
 
+    // Get node ip from its hostname
+    he = gethostbyname(node->hostname);
+
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, node->hostname, &servaddr.sin_addr);
     servaddr.sin_port = htons(MONITOR_FULL_PORT);
+    servaddr.sin_addr = *((struct in_addr *) he->h_addr);
 
     // connect the client socket to server socket
     connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
