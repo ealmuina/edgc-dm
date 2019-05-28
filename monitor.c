@@ -88,7 +88,7 @@ void update_processes(int node_index) {
     // Send signal to modify the number of processes
     if (delta) {
         // Activate monitoring in FlexMPI controller
-        sprintf(buffer, "%d 4:on", tasks[task].flexmpi_id);
+        sprintf(buffer, "%d 0 4:on", tasks[task].flexmpi_id);
         send_controller_instruction(buffer, 0);
 
         // Send instruction to change processes
@@ -117,7 +117,7 @@ void update_processes(int node_index) {
             diff = task_processes - atoi(procs);
         }
         // Deactivate monitoring in FlexMPI controller
-        sprintf(buffer, "%d 4:off", tasks[task].flexmpi_id);
+        sprintf(buffer, "%d 0 4:off", tasks[task].flexmpi_id);
         send_controller_instruction(buffer, 0);
 
         if (delta < 0)
@@ -201,7 +201,6 @@ void *monitor_func(void *args) {
 
         // Extract loadavg from received data
         float cpu_load = *(float *) stats;
-        stats += sizeof(float);
 
         // Search node in the list
         int index = 0;
