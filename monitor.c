@@ -130,13 +130,45 @@ void update_processes(int node_index) {
     pthread_mutex_unlock(&tasks_lock);
 }
 
+void request_full_info(int node_index) {
+    int sockfd;
+    struct sockaddr_in servaddr;
+    struct node *node = &nodes[node_index];
+
+    // socket create
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    bzero(&servaddr, sizeof(servaddr));
+
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    inet_pton(AF_INET, node->hostname, &servaddr.sin_addr);
+    servaddr.sin_port = htons(MONITOR_FULL_PORT);
+
+    // connect the client socket to server socket
+    connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+
+    // Receive information
+    char buffer[BUFFER_SIZE];
+    recv(sockfd, buffer, BUFFER_SIZE, 0);
+
+    // Extract number of processors from received data
+    int cpus = *(int *) buffer;
+    char *stats = buffer + sizeof(int);
+
+    node->cpus = cpus;
+    strcpy(node->stats, stats);
+
+    // close the socket
+    close(sockfd);
+}
+
 void *monitor_func(void *args) {
     int monitor_sockfd;
     socklen_t len;
     char buffer[BUFFER_SIZE];
     struct sockaddr_in cli_addr;
 
-    initialize_socket(&monitor_sockfd, MONITOR_PORT);
+    initialize_socket(&monitor_sockfd, MONITOR_LITE_PORT);
     initialize_socket(&controller_sockfd, CONTROLLER_PORT);
 
     print_log("Monitor thread initialized.");
@@ -148,7 +180,7 @@ void *monitor_func(void *args) {
         int n = recvfrom(monitor_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         buffer[n] = '\0';
 
-        // Get time for knowing last time the node was seen
+        // Get current time to calculate last time the node was seen
         time_t now;
         time(&now);
 
@@ -162,10 +194,6 @@ void *monitor_func(void *args) {
         // Extract loadavg from received data
         float cpu_load = *(float *) stats;
         stats += sizeof(float);
-
-        // Extract number of processors from received data
-        int cpus = *(int *) stats;
-        stats += sizeof(int);
 
         // Search node in the list
         int index = 0;
@@ -183,17 +211,19 @@ void *monitor_func(void *args) {
                 char info[FIELD_SIZE];
                 sprintf(info, "Detected node '%s'.", hostname);
                 print_log(info);
+
                 // Reset information regarding tasks
                 memset(nodes[index].processes, 0, sizeof(nodes[index].processes));
                 memset(nodes[index].root_task, 0, sizeof(nodes[index].root_task));
+
+                // Request node full information
+                strcpy(nodes[index].hostname, hostname);
+                request_full_info(index);
             }
 
             nodes[index].active = 1;
-            strcpy(nodes[index].stats, stats);
-            strcpy(nodes[index].hostname, hostname);
             nodes[index].last_seen = now;
             nodes[index].cpu_load = cpu_load;
-            nodes[index].cpus = cpus;
 
             // Update processes
             update_processes(index);
