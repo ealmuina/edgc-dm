@@ -41,7 +41,7 @@ void *report_func(void *args) {
 
         // Report to log
         sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
-        print_log(buffer, 4);
+        print_log(buffer, 5);
         pthread_mutex_unlock(&tasks_lock);
 
         // Clean processes information regarding that task in all nodes

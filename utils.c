@@ -38,15 +38,17 @@ void print_log(char *msg, int event) {
         // If it has event type report it to events log file
         /* EVENT TYPES:
          * 1: Register in repository
-         * 2: Reduced load of a task
-         * 3: Increased load of a task
-         * 4: Reported result of a task
+         * 2: Requested execution of a task
+         * 3: Reduced load of a task
+         * 4: Increased load of a task
+         * 5: Reported result of a task
          * */
         if (!eventsfd)
             eventsfd = fopen("dm-events.log", "w");
         char entry[FIELD_SIZE];
-        sprintf(entry, "%ld\t%d", rawtime, event);
+        sprintf(entry, "%ld\t%d\n", rawtime, event);
         fwrite(entry, sizeof(char), strlen(entry), eventsfd);
+        fflush(eventsfd);
     }
 }
 

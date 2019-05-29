@@ -174,7 +174,7 @@ int process_task(int id) {
                 print_log(buffer, 0);
                 request_execution(&task, i);
                 sprintf(buffer, "Requested execution of task %d.", task.id);
-                print_log(buffer, 0);
+                print_log(buffer, 2);
                 return 0;
             } else {
                 sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);

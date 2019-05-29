@@ -266,11 +266,11 @@ void *updater_func(void *args) {
                 if (delta < 0) {
                     sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", tasks[task].id,
                             node->hostname, delta);
-                    print_log(buffer, 2);
+                    print_log(buffer, 3);
                 } else {
                     sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", tasks[task].id,
                             node->hostname, delta);
-                    print_log(buffer, 3);
+                    print_log(buffer, 4);
                 }
             }
             pthread_mutex_unlock(&tasks_lock);
