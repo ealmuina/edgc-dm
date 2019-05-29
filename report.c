@@ -3,7 +3,8 @@
 void *report_func(void *args) {
     char buffer[FIELD_SIZE];
     int domain_id = *(int *) args;
-    int sockfd, len;
+    int sockfd;
+    socklen_t len;
     struct sockaddr_in serv_addr, cli_addr;
 
     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -22,7 +23,7 @@ void *report_func(void *args) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
-        int n = recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+        recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         int id = atoi(buffer);
 
         // Find task index
