@@ -137,10 +137,10 @@ int process_task(int id) {
 
     if (code != 200) {
         sprintf(buffer, "Error requesting task.");
-        print_log(buffer);
+        print_log(buffer, 0);
     } else {
         sprintf(buffer, "Received task %d.", task.id);
-        print_log(buffer);
+        print_log(buffer, 0);
 
         // Save task
         int i;
@@ -166,19 +166,19 @@ int process_task(int id) {
             // Download task files
             download_task(&task);
             sprintf(buffer, "Downloaded task %d content.", task.id);
-            print_log(buffer);
+            print_log(buffer, 0);
 
             // Validate files and put in execution
             if (validate_task(&task)) {
                 sprintf(buffer, "Task %d downloaded correctly.", task.id);
-                print_log(buffer);
+                print_log(buffer, 0);
                 request_execution(&task, i);
                 sprintf(buffer, "Requested execution of task %d.", task.id);
-                print_log(buffer);
+                print_log(buffer, 0);
                 return 0;
             } else {
                 sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);
-                print_log(buffer);
+                print_log(buffer, 0);
                 // Set task space status to inactive
                 pthread_mutex_lock(&tasks_lock);
                 tasks[i].active = 0;
@@ -186,7 +186,7 @@ int process_task(int id) {
                 return -2;
             }
         } else {
-            print_log("Error: Limit of tasks in execution has been reached.");
+            print_log("Error: Limit of tasks in execution has been reached.", 0);
             return -1;
         }
     }

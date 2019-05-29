@@ -1,5 +1,7 @@
 #include "include/utils.h"
 
+FILE *eventsfd;
+
 char *md5(const char *file_name) {
     unsigned char c[MD5_DIGEST_LENGTH];
 
@@ -26,11 +28,26 @@ char *md5(const char *file_name) {
     return hash;
 }
 
-void print_log(char *msg) {
+void print_log(char *msg, int event) {
     time_t rawtime;
     time(&rawtime);
     char *time = strtok(ctime(&rawtime), "\n");
     printf("[%s] %s\n", time, msg);
+
+    if (event) {
+        // If it has event type report it to events log file
+        /* EVENT TYPES:
+         * 1: Register in repository
+         * 2: Reduced load of a task
+         * 3: Increased load of a task
+         * 4: Reported result of a task
+         * */
+        if (!eventsfd)
+            eventsfd = fopen("dm_events.log", "w");
+        char entry[FIELD_SIZE];
+        sprintf(entry, "%ld\t%d", rawtime, event);
+        fwrite(entry, sizeof(char), strlen(entry), eventsfd);
+    }
 }
 
 void send_controller_instruction(char *instr, int report) {

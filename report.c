@@ -17,7 +17,7 @@ void *report_func(void *args) {
 
     bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
 
-    print_log("Report thread initialized.");
+    print_log("Report thread initialized.", 0);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
@@ -41,7 +41,7 @@ void *report_func(void *args) {
 
         // Report to log
         sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
-        print_log(buffer);
+        print_log(buffer, 4);
         pthread_mutex_unlock(&tasks_lock);
 
         // Clean processes information regarding that task in all nodes

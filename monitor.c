@@ -127,7 +127,7 @@ void *monitor_func(void *args) {
     initialize_socket(&monitor_sockfd, MONITOR_LITE_PORT);
     initialize_socket(&controller_sockfd, CONTROLLER_PORT);
 
-    print_log("Monitor thread initialized.");
+    print_log("Monitor thread initialized.", 0);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
@@ -165,7 +165,7 @@ void *monitor_func(void *args) {
             if (nodes[index].active == 0) {
                 char info[FIELD_SIZE];
                 sprintf(info, "Detected node '%s'.", hostname);
-                print_log(info);
+                print_log(info, 0);
 
                 // Reset information regarding tasks
                 memset(nodes[index].processes, 0, sizeof(nodes[index].processes));
@@ -186,7 +186,7 @@ void *monitor_func(void *args) {
                     nodes[i].active = 0;
                     sprintf(buffer, "Removed node '%s' after being inactive for %d seconds.", nodes[i].hostname,
                             TIMEOUT);
-                    print_log(buffer);
+                    print_log(buffer, 0);
                 }
             }
         }
@@ -197,7 +197,7 @@ void *monitor_func(void *args) {
 
 void *updater_func(void *args) {
     char buffer[BUFFER_SIZE];
-    print_log("Updater thread initialized.");
+    print_log("Updater thread initialized.", 0);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
@@ -263,13 +263,15 @@ void *updater_func(void *args) {
                 sprintf(buffer, "%d 0 4:off", tasks[task].flexmpi_id);
                 send_controller_instruction(buffer, 0);
 
-                if (delta < 0)
-                    sprintf(buffer, "Reduced load of task %d in node '%s'.", tasks[task].id, node->hostname);
-                else
-                    sprintf(buffer, "Increased load in node '%s' for task %d by %d processes.", node->hostname,
-                            tasks[task].id,
-                            delta);
-                print_log(buffer);
+                if (delta < 0) {
+                    sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", tasks[task].id,
+                            node->hostname, delta);
+                    print_log(buffer, 2);
+                } else {
+                    sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", tasks[task].id,
+                            node->hostname, delta);
+                    print_log(buffer, 3);
+                }
             }
             pthread_mutex_unlock(&tasks_lock);
             pthread_mutex_unlock(&nodes_lock);

@@ -17,7 +17,7 @@ char repository_url[FIELD_SIZE];
 
 char *md5(const char *file_name);
 
-void print_log(char *msg);
+void print_log(char *msg, int event);
 
 void send_controller_instruction(char *instr, int report);
 
