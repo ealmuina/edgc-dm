@@ -282,5 +282,5 @@ void start_monitor() {
     pthread_mutex_init(&nodes_lock, NULL);
     pthread_t monitor, updater;
     pthread_create(&monitor, NULL, monitor_func, NULL);
-    pthread_create(&monitor, NULL, updater_func, NULL);
+    pthread_create(&updater, NULL, updater_func, NULL);
 }
