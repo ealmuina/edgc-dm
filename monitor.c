@@ -102,7 +102,7 @@ void update_processes(int node_index) {
             if (nodes[i].active)
                 task_processes += nodes[i].processes[task]; // Store in task_processes its total number of processes
         }
-//        int times = 0;
+        int times = 0;
         while (diff) {
             // Keep trying until the number of processes is synchronized with FlexMPI
             sprintf(buffer, "%d 2", tasks[task].flexmpi_id);
@@ -110,21 +110,21 @@ void update_processes(int node_index) {
 
             socklen_t len;
             struct sockaddr_in cli_addr;
-            int n = recvfrom(controller_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+            recvfrom(controller_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
             char *saveptr, *procs;
             strtok_r(buffer, " ", &saveptr);
             procs = strtok_r(NULL, " ", &saveptr);
 
             diff = task_processes - atoi(procs);
 
-//            if (++times > 200) {
-//                // Try again switching monitoring off and on
-//                sprintf(buffer, "%d 0 4:off", tasks[task].flexmpi_id);
-//                send_controller_instruction(buffer, 0);
-//
-//                sprintf(buffer, "%d 0 4:on", tasks[task].flexmpi_id);
-//                send_controller_instruction(buffer, 0);
-//            }
+            if (++times > 200) {
+                // Try again switching monitoring off and on
+                sprintf(buffer, "%d 0 4:off", tasks[task].flexmpi_id);
+                send_controller_instruction(buffer, 0);
+
+                sprintf(buffer, "%d 0 4:on", tasks[task].flexmpi_id);
+                send_controller_instruction(buffer, 0);
+            }
         }
         // Deactivate monitoring in FlexMPI controller
         sprintf(buffer, "%d 0 4:off", tasks[task].flexmpi_id);
