@@ -43,7 +43,7 @@ void print_log(char *msg, int event) {
          * 4: Reported result of a task
          * */
         if (!eventsfd)
-            eventsfd = fopen("dm_events.log", "w");
+            eventsfd = fopen("dm-events.log", "w");
         char entry[FIELD_SIZE];
         sprintf(entry, "%ld\t%d", rawtime, event);
         fwrite(entry, sizeof(char), strlen(entry), eventsfd);
