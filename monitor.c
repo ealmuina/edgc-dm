@@ -202,6 +202,8 @@ void *updater_func(void *args) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
+        sleep(UPDATER_INTERVAL);
+
         for (int i = 0; i < NODES_MAX; ++i) {
             pthread_mutex_lock(&nodes_lock);
 

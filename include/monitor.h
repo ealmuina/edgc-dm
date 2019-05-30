@@ -23,6 +23,7 @@
 #define LOAD_EPSILON 0.1
 #define MAX_LOAD 0.9
 #define MAX_TASKS 1024
+#define UPDATER_INTERVAL 5
 
 struct node {
     char stats[BUFFER_SIZE], hostname[NAME_LENGTH_MAX];
