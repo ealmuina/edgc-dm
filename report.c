@@ -51,6 +51,7 @@ void *report_func(void *args) {
 
         // Clean processes information regarding that task in all nodes
         pthread_mutex_lock(&nodes_lock);
+        printf("LOCK report.c:54\n");
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[i].active) {
                 nodes[i].processes[index] = 0;
@@ -58,6 +59,7 @@ void *report_func(void *args) {
             }
         }
         pthread_mutex_unlock(&nodes_lock);
+        printf("UNLOCK report.c:61\n");
     }
 #pragma clang diagnostic pop
 }

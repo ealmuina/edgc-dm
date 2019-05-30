@@ -89,6 +89,7 @@ void request_execution(struct task *task, int task_index) {
 
     // Find the best node for starting execution in it
     pthread_mutex_lock(&nodes_lock);
+    printf("LOCK task.c:92\n");
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active && strcmp(hostname, nodes[i].hostname) != 0) {
             // Cores to be used will be the CPUs * free_fraction_of_load
@@ -117,7 +118,7 @@ void request_execution(struct task *task, int task_index) {
     // Send command to start application
     char command[FIELD_SIZE];
     sprintf(command,
-            "-1 dynamic:20000:2:1:0:2.500000:10000:%s:%d",
+            "-1 dynamic:20000:2:1:0:2.500000:100:%s:%d",
             nodes[root_node].hostname,
             nodes[root_node].processes[task_index]
     );
@@ -128,6 +129,7 @@ void request_execution(struct task *task, int task_index) {
     send_controller_instruction(command, 1);
 
     pthread_mutex_unlock(&nodes_lock);
+    printf("UNLOCK task.c:132\n");
 }
 
 int process_task(int id) {
