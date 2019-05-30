@@ -33,6 +33,7 @@ void print_log(char *msg, int event) {
     time(&rawtime);
     char *time = strtok(ctime(&rawtime), "\n");
     printf("[%s] %s\n", time, msg);
+    fflush(stdout);
 
     if (event) {
         // If it has event type report it to events log file
