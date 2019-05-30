@@ -26,9 +26,12 @@ void *report_func(void *args) {
         recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         int id = atoi(buffer);
 
+        printf(">>>>>>>>>>>>>>>>>>> %d\n", id);
+
         // Find task index
         int index;
         pthread_mutex_lock(&tasks_lock);
+        printf("LOCK report.c:34\n");
         for (index = 0; index < TASKS_MAX; ++index) {
             if (tasks[index].active && tasks[index].flexmpi_id == id)
                 break;
@@ -44,6 +47,7 @@ void *report_func(void *args) {
         sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
         print_log(buffer, 5);
         pthread_mutex_unlock(&tasks_lock);
+        printf("UNLOCK report.c:50\n");
 
         // Clean processes information regarding that task in all nodes
         pthread_mutex_lock(&nodes_lock);

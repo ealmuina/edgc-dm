@@ -41,7 +41,7 @@ void initialize_socket(int *sockfd, int port);
 
 int calculate_adjustment(struct node *node, int *task);
 
-void update_processes(int node_index);
+void *updater_func(void *args);
 
 void *monitor_func(void *args);
 
