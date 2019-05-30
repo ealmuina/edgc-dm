@@ -55,7 +55,7 @@ int calculate_adjustment(struct node *node, int *task) {
         *task = max_task;
     }
         // Check if load could be increased
-    else if (total_processes < node->cpus) {
+    else if (total_processes < node->cpus - 1) {
         float process_load;
         if (total_processes)
             process_load = node->cpu_load / total_processes;
@@ -67,8 +67,8 @@ int calculate_adjustment(struct node *node, int *task) {
         // Increase if new_processes > 0
         if (new_processes > 0) {
             // Set delta of processes to new_processes
-            delta = (int) fmin(new_processes, node->cpus - total_processes);
-            delta = (int) fmin(delta, node->cpus / 2.0); // only half of total CPUs at once
+            delta = (int) fmin(new_processes, node->cpus - 1 - total_processes);
+            //delta = (int) fmin(delta, node->cpus / 2.0); // only half of total CPUs at once
             *task = min_task;
         }
     }
