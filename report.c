@@ -26,8 +26,6 @@ void *report_func(void *args) {
         recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         int id = atoi(buffer);
 
-        printf(">>>>>>>>>>>>>>>>>>> %d\n", id);
-
         // Find task index
         int index;
         pthread_mutex_lock(&tasks_lock);

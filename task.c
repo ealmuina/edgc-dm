@@ -115,7 +115,7 @@ void request_execution(struct task *task, int task_index) {
     // Send command to start application
     char command[FIELD_SIZE];
     sprintf(command,
-            "-1 dynamic:20000:2:1:0:2.500000:100:%s:%d",
+            "-1 dynamic:20000:2:1:0:2.500000:10000:%s:%d",
             nodes[root_node].hostname,
             nodes[root_node].processes[task_index]
     );
