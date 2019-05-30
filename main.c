@@ -24,7 +24,6 @@ int register_domain() {
     big_buffer[0] = '[';
 
     pthread_mutex_lock(&nodes_lock);
-    printf("LOCK main.c:27\n");
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             strcat(big_buffer, nodes[i].stats);
@@ -32,7 +31,6 @@ int register_domain() {
         }
     }
     pthread_mutex_unlock(&nodes_lock);
-    printf("UNLOCK main.c:35\n");
     int len = strlen(big_buffer);
     if (big_buffer[len - 1] == ',')
         big_buffer[len - 1] = ']';
@@ -83,12 +81,10 @@ int main(int argc, char *argv[]) {
     while (1) {
         int current_tasks = 0;
         pthread_mutex_lock(&tasks_lock);
-        printf("LOCK main.c:84\n");
         for (int i = 0; i < MAX_TASKS; ++i) {
             if (tasks[i].active) current_tasks++;
         }
         pthread_mutex_unlock(&tasks_lock);
-        printf("UNLOCK main.c:89\n");
 
         // Process a task
         if (current_tasks < max_tasks)

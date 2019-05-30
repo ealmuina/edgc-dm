@@ -89,7 +89,6 @@ void request_execution(struct task *task, int task_index) {
 
     // Find the best node for starting execution in it
     pthread_mutex_lock(&nodes_lock);
-    printf("LOCK task.c:92\n");
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active && strcmp(hostname, nodes[i].hostname) != 0) {
             // Cores to be used will be the CPUs * free_fraction_of_load
@@ -109,11 +108,9 @@ void request_execution(struct task *task, int task_index) {
 
     // Activate task and set its flexmpi_id
     pthread_mutex_lock(&tasks_lock);
-    printf("LOCK task.c:111\n");
     tasks[task_index].active = task->active = 1;
     tasks[task_index].flexmpi_id = task->flexmpi_id = FLEXMPI_ID++;
     pthread_mutex_unlock(&tasks_lock);
-    printf("UNLOCK task.c:115\n");
 
     // Send command to start application
     char command[FIELD_SIZE];
@@ -129,7 +126,6 @@ void request_execution(struct task *task, int task_index) {
     send_controller_instruction(command, 1);
 
     pthread_mutex_unlock(&nodes_lock);
-    printf("UNLOCK task.c:132\n");
 }
 
 int process_task(int id) {
@@ -149,7 +145,6 @@ int process_task(int id) {
         // Save task
         int i;
         pthread_mutex_lock(&tasks_lock);
-        printf("LOCK task.c:150\n");
         for (i = 0; i < TASKS_MAX; ++i) {
             if (!tasks[i].active) {
                 tasks[i].id = task.id;
@@ -166,7 +161,6 @@ int process_task(int id) {
             }
         }
         pthread_mutex_unlock(&tasks_lock);
-        printf("UNLOCK task.c:167\n");
 
         if (i != TASKS_MAX) {
             // Download task files
@@ -187,10 +181,8 @@ int process_task(int id) {
                 print_log(buffer, 0);
                 // Set task space status to inactive
                 pthread_mutex_lock(&tasks_lock);
-                printf("LOCK task.c:186\n");
                 tasks[i].active = 0;
                 pthread_mutex_unlock(&tasks_lock);
-                printf("UNLOCK task.c:191\n");
                 return -2;
             }
         } else {

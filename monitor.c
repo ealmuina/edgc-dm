@@ -151,7 +151,6 @@ void *monitor_func(void *args) {
         // Search node in the list
         int index = 0;
         pthread_mutex_lock(&nodes_lock);
-        printf("LOCK monitor.c:154\n");
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
@@ -190,7 +189,6 @@ void *monitor_func(void *args) {
             }
         }
         pthread_mutex_unlock(&nodes_lock);
-        printf("UNLOCK monitor.c:193\n");
 #pragma clang diagnostic pop
     }
 }
@@ -206,11 +204,9 @@ void *updater_func(void *args) {
 
         for (int i = 0; i < NODES_MAX; ++i) {
             pthread_mutex_lock(&nodes_lock);
-            printf("LOCK monitor.c:208\n");
 
             if (!nodes[i].active) {
                 pthread_mutex_unlock(&nodes_lock);
-                printf("UNLOCK monitor.c:213\n");
                 continue; // Skip inactive nodes
             }
 
@@ -220,10 +216,8 @@ void *updater_func(void *args) {
             // Get a task to adjust and its processes delta for this node
             pthread_mutex_lock(&tasks_lock);
             delta = calculate_adjustment(node, &task_index);
-            printf("LOCK monitor.c:221\n");
             struct task task = tasks[task_index];
             pthread_mutex_unlock(&tasks_lock);
-            printf("UNLOCK monitor.c:224\n");
 
             // Send signal to modify the number of processes
             if (delta) {
@@ -247,7 +241,6 @@ void *updater_func(void *args) {
                 char hostname[FIELD_SIZE];
                 strcpy(hostname, node->hostname);
                 pthread_mutex_unlock(&nodes_lock);
-                printf("UNLOCK monitor.c:249\n");
 
                 int times = 0;
                 while (diff) {
@@ -287,7 +280,6 @@ void *updater_func(void *args) {
                 }
             } else {
                 pthread_mutex_unlock(&nodes_lock);
-                printf("UNLOCK monitor.c:290\n");
             }
         }
     }
