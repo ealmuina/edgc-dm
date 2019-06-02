@@ -8,7 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE  (2 * 1024 * 1024)  /* 2 MB */
+#define BUFFER_SIZE  (512 * 1024)  /* 512 KB */
 #define FIELD_SIZE 1024
 #define FLEXMPI_INTERVAL 20 /* Time to wait before sending commands to FlexMPI controller so it can process
                              * previous commands */
