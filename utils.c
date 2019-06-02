@@ -43,6 +43,7 @@ void print_log(char *msg, int event) {
          * 3: Reduced load of a task
          * 4: Increased load of a task
          * 5: Reported result of a task
+         * 6: Detected node
          * */
         if (!eventsfd)
             eventsfd = fopen("dm-events.log", "w");

@@ -163,7 +163,7 @@ void *monitor_func(void *args) {
             if (nodes[index].active == 0) {
                 char info[FIELD_SIZE];
                 sprintf(info, "Detected node '%s'.", hostname);
-                print_log(info, 0);
+                print_log(info, 6);
 
                 // Reset information regarding tasks
                 memset(nodes[index].processes, 0, sizeof(nodes[index].processes));
