@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
         if (current_tasks < max_tasks)
             process_task(id);
 
-        sleep(60);
+        sleep(120);
     }
 #pragma clang diagnostic pop
 
