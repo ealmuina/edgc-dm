@@ -23,6 +23,7 @@
 #define LOAD_EPSILON 0
 #define MAX_LOAD 0.9
 #define MAX_TASKS 1024
+#define MAX_DELTA_PROCESSES 100
 #define UPDATER_INTERVAL 5
 
 struct node {
