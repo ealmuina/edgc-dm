@@ -55,13 +55,14 @@ int calculate_adjustment(struct node *node, int *task) {
         *task = max_task;
     }
         // Check if load could be increased
-    else if (total_processes < node->cpus - 1) {
+    else if (node->cpu_load < MAX_LOAD - LOAD_EPSILON && total_processes < node->cpus - 1) {
         float process_load;
         if (total_processes)
             process_load = node->cpu_load / total_processes;
         else
             process_load = 0.25;
-        float available_load = MAX_LOAD - LOAD_EPSILON - node->cpu_load;
+        float goal_load = (MAX_LOAD + MAX_LOAD - LOAD_EPSILON) / 2; // Value between max and min loads allowed
+        float available_load = goal_load - node->cpu_load;
         int new_processes = (int) (available_load / process_load); // Estimation of new processes
 
         // Increase if new_processes > 0
