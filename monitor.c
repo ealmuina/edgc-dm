@@ -234,7 +234,7 @@ void *updater_func(void *args) {
                 int diff = 1, task_processes = 0;
                 for (int j = 0; j < NODES_MAX; ++j) {
                     if (nodes[j].active)
-                        task_processes += nodes[j].processes[task_index]; // Store in task_processes its total number of processes
+                        task_processes += nodes[j].processes[task_index]; // Store in task_processes its total processes
                 }
 
                 // Create copy of hostname for reporting and unlock the mutex
@@ -271,7 +271,7 @@ void *updater_func(void *args) {
                 send_controller_instruction(buffer, 0);
 
                 if (delta < 0) {
-                    sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname, delta);
+                    sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname, -delta);
                     print_log(buffer, 3);
                 } else {
                     sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", task.id, hostname,
