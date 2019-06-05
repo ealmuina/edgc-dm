@@ -286,7 +286,13 @@ void *updater_func(void *args) {
 #pragma clang diagnostic pop
 }
 
-void start_monitor() {
+void start_monitor(double max_load, double load_epsilon) {
+    if (max_load) MAX_LOAD = max_load;
+    else MAX_LOAD = 0.9;
+
+    if (load_epsilon) LOAD_EPSILON = load_epsilon;
+    else LOAD_EPSILON = 0.015;
+
     pthread_mutex_init(&nodes_lock, NULL);
     pthread_t monitor, updater;
     pthread_create(&monitor, NULL, monitor_func, NULL);

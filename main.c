@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
     int max_tasks = 1;
     char buffer[BUFFER_SIZE];
 
-    if (argc != 2) {
-        printf("Usage edgc-dm <repository_url>");
+    if (argc < 2 || argc > 4) {
+        printf("Usage edgc-dm <repository_url> [MAX_LOAD] [LOAD_EPSILON]");
         return -1;
     }
     if (strncmp("http://", argv[1], 7) == 0)
@@ -62,8 +62,15 @@ int main(int argc, char *argv[]) {
     else
         sprintf(repository_url, "http://%s", argv[1]);
 
+    // Parse max_load and load_epsilon
+    double max_load = 0, load_epsilon = 0;
+    if (argc == 3)
+        max_load = atof(argv[2]);
+    if (argc == 4)
+        load_epsilon = atof(argv[3]);
+
     // Initialize monitor and wait for nodes to report their statistics
-    start_monitor();
+    start_monitor(max_load, load_epsilon);
     print_log("Program will wait 30 seconds for recovering nodes data", 0);
     fflush(stdout);
     sleep(30); // wait to receive nodes data first

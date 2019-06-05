@@ -20,11 +20,11 @@
 #define MONITOR_LITE_PORT 9910
 #define MONITOR_FULL_PORT 9913
 #define CONTROLLER_PORT 9912
-#define LOAD_EPSILON 0.015
-#define MAX_LOAD 0.9
 #define MAX_TASKS 1024
 #define MAX_DELTA_PROCESSES 100
 #define UPDATER_INTERVAL 5
+
+double MAX_LOAD, LOAD_EPSILON;
 
 struct node {
     char stats[BUFFER_SIZE], hostname[NAME_LENGTH_MAX];
@@ -46,6 +46,6 @@ void *updater_func(void *args);
 
 void *monitor_func(void *args);
 
-void start_monitor();
+void start_monitor(double max_load, double load_epsilon);
 
 #endif //EDGC_DM_MONITOR_H
