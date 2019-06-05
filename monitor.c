@@ -291,7 +291,7 @@ void start_monitor(double max_load, double load_epsilon) {
     else MAX_LOAD = 0.9;
 
     if (load_epsilon) LOAD_EPSILON = load_epsilon;
-    else LOAD_EPSILON = 0.015;
+    else LOAD_EPSILON = 0.025;
 
     pthread_mutex_init(&nodes_lock, NULL);
     pthread_t monitor, updater;
