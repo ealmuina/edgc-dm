@@ -85,7 +85,7 @@ void request_execution(struct task *task, int task_index) {
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             // Cores to be used will be the CPUs * free_fraction_of_load
-            int cores = (int) roundf(nodes[i].cpus * fmax(0, 1 - nodes[i].cpu_load + LOAD_EPSILON));
+            int cores = (int) roundf(nodes[i].cpus * fmax(0, 1 - nodes[i].cpu_load));
 
             // Root node will be the one with the most cores
             if (cores > max_cores) {
