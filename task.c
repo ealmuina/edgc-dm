@@ -80,17 +80,10 @@ void request_execution(struct task *task, int task_index) {
     // Execute unpacking script
     system(task->unpack);
 
-    // Read name of localhost to avoid starting applications in it
-    char hostname[FIELD_SIZE];
-    FILE *file = fopen("/etc/hostname", "r");
-    int len = fread(hostname, sizeof(char), FIELD_SIZE, file);
-    hostname[len - 1] = 0;
-    fclose(file);
-
     // Find the best node for starting execution in it
     pthread_mutex_lock(&nodes_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
-        if (nodes[i].active && strcmp(hostname, nodes[i].hostname) != 0) {
+        if (nodes[i].active) {
             // Cores to be used will be the CPUs * free_fraction_of_load
             int cores = (int) roundf(nodes[i].cpus * fmax(0, 1 - nodes[i].cpu_load + LOAD_EPSILON));
 
