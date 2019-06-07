@@ -31,6 +31,7 @@ struct task {
 };
 
 struct task tasks[TASKS_MAX];
+pthread_mutex_t tasks_lock;
 
 void download_task(struct task *task);
 

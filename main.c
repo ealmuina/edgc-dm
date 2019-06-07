@@ -69,6 +69,9 @@ int main(int argc, char *argv[]) {
     if (argc == 4)
         load_epsilon = atof(argv[3]);
 
+    // Initialize mutex for tasks
+    pthread_mutex_init(&tasks_lock, NULL);
+
     // Initialize monitor and wait for nodes to report their statistics
     start_monitor(max_load, load_epsilon);
     print_log("Program will wait 30 seconds for recovering nodes data", 0);
