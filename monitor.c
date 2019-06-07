@@ -146,7 +146,7 @@ void *monitor_func(void *args) {
         hostname[slen] = 0;
         char *stats = buffer + slen + 1;
 
-        // Extract loadavg from received data
+        // Extract cpu_load from received data
         float cpu_load = *(float *) stats;
 
         // Search node in the list
