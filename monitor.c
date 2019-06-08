@@ -238,14 +238,13 @@ void *updater_func(void *args) {
                 send_controller_instruction(buffer, 1);
                 node->processes[task_index] += delta;
 
-                // Check until changes are done
                 int diff = 1, task_processes = 0;
                 for (int j = 0; j < NODES_MAX; ++j) {
                     if (nodes[j].active)
                         task_processes += nodes[j].processes[task_index]; // Store in task_processes its total processes
                 }
 
-                // Create copy of hostname for reporting and unlock the mutex
+                // Create copy of hostname for logging and unlock the mutex
                 char hostname[FIELD_SIZE];
                 strcpy(hostname, node->hostname);
                 pthread_mutex_unlock(&nodes_lock);
