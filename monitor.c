@@ -50,9 +50,14 @@ int calculate_adjustment(struct node *node, int *task) {
     if (node->cpu_load > MAX_LOAD && total_processes) {
         float process_load = node->cpu_load / total_processes;
 
-        // Set delta to the number of processes above the maximum allowed load
-        delta = -(int) (node->processes[max_task] - MAX_LOAD / process_load);
+        // Set delta to get the processes to the middle of the interval [MAX_LOAD - LOAD_EPSILON, MAX_LOAD]
+        float goal_load = (MAX_LOAD + MAX_LOAD - LOAD_EPSILON) / 2; // Value between max and min loads allowed
+        delta = -(int) (node->processes[max_task] - goal_load / process_load);
         *task = max_task;
+
+        // Adjust delta if the node is root for task
+        if (node->root_task[max_task])
+            delta = (int) fmax(delta, ROOT_PROCESSES - node->processes[max_task]);
     }
         // Check if load could be increased
     else if (node->cpu_load < MAX_LOAD - LOAD_EPSILON && total_processes < node->cpus - 1) {
@@ -61,6 +66,8 @@ int calculate_adjustment(struct node *node, int *task) {
             process_load = node->cpu_load / total_processes;
         else
             process_load = 0.25;
+
+        // Set delta to get the processes to the middle of the interval [MAX_LOAD - LOAD_EPSILON, MAX_LOAD]
         float goal_load = (MAX_LOAD + MAX_LOAD - LOAD_EPSILON) / 2; // Value between max and min loads allowed
         float available_load = goal_load - node->cpu_load;
         int new_processes = (int) (available_load / process_load); // Estimation of new processes
