@@ -50,24 +50,32 @@ int register_domain() {
 }
 
 int main(int argc, char *argv[]) {
-    int max_tasks = 1;
     char buffer[BUFFER_SIZE];
 
-    if (argc < 2 || argc > 4) {
-        printf("Usage edgc-dm <repository_url> [MAX_LOAD] [LOAD_EPSILON]");
+    if (argc < 2 || argc > 5) {
+        printf("Usage edgc-dm <repository_url> [max_tasks] [max_load] [load_epsilon]");
         return -1;
     }
+
+    // Parse repository URL
     if (strncmp("http://", argv[1], 7) == 0)
         sprintf(repository_url, "%s", argv[1]);
     else
         sprintf(repository_url, "http://%s", argv[1]);
 
+    // Parse max_tasks
+    int max_tasks = 0;
+    if (argc == 3)
+        max_tasks = atoi(argv[2]);
+    if (!max_tasks)
+        max_tasks = 1;
+
     // Parse max_load and load_epsilon
     double max_load = 0, load_epsilon = 0;
-    if (argc == 3)
-        max_load = atof(argv[2]);
     if (argc == 4)
-        load_epsilon = atof(argv[3]);
+        max_load = atof(argv[3]);
+    if (argc == 5)
+        load_epsilon = atof(argv[4]);
 
     // Initialize mutex for tasks
     pthread_mutex_init(&tasks_lock, NULL);
