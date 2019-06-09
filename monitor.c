@@ -266,7 +266,7 @@ void *updater_func(void *args) {
 
                     diff = task_processes - atoi(procs);
 
-                    if (++times > 200) {
+                    if (++times > 90) {
                         // Kill task
                         sprintf(buffer, "%d 5", task.flexmpi_id);
                         send_controller_instruction(buffer, 1);
