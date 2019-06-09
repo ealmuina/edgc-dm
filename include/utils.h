@@ -7,6 +7,7 @@
 #include <openssl/md5.h>
 #include <time.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #define BUFFER_SIZE  (512 * 1024)  /* 512 KB */
 #define FIELD_SIZE 1024
@@ -14,6 +15,8 @@
                              * previous commands */
 
 char repository_url[FIELD_SIZE];
+
+pthread_mutex_t controller_lock;
 
 char *md5(const char *file_name);
 

@@ -77,8 +77,9 @@ int main(int argc, char *argv[]) {
     if (argc == 5)
         load_epsilon = atof(argv[4]);
 
-    // Initialize mutex for tasks
+    // Initialize mutex for tasks and controller
     pthread_mutex_init(&tasks_lock, NULL);
+    pthread_mutex_init(&controller_lock, NULL);
 
     // Initialize monitor and wait for nodes to report their statistics
     start_monitor(max_load, load_epsilon);
