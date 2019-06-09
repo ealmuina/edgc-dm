@@ -231,7 +231,7 @@ void *updater_func(void *args) {
             if (delta) {
                 // Activate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
-                send_controller_instruction(buffer, 0);
+                send_controller_instruction(buffer, -1);
 
                 // Send instruction to change processes
                 sprintf(buffer, "%d 0 6:%s:%d", task.flexmpi_id, node->hostname, delta);
@@ -254,7 +254,7 @@ void *updater_func(void *args) {
                 while (diff) {
                     // Keep trying until the number of processes is synchronized with FlexMPI
                     sprintf(buffer, "%d 2", task.flexmpi_id);
-                    send_controller_instruction(buffer, 0);
+                    send_controller_instruction(buffer, -1);
 
                     socklen_t len;
                     struct sockaddr_in cli_addr;
@@ -268,15 +268,15 @@ void *updater_func(void *args) {
                     if (++times > 200) {
                         // Try again switching monitoring off and on
                         sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
-                        send_controller_instruction(buffer, 0);
+                        send_controller_instruction(buffer, -1);
 
                         sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
-                        send_controller_instruction(buffer, 0);
+                        send_controller_instruction(buffer, -1);
                     }
                 }
                 // Deactivate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
-                send_controller_instruction(buffer, 0);
+                send_controller_instruction(buffer, -1);
                 pthread_mutex_unlock(&controller_lock);
 
                 if (delta < 0) {
