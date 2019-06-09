@@ -106,6 +106,7 @@ void request_execution(struct task *task, int task_index) {
     pthread_mutex_unlock(&tasks_lock);
 
     // Send command to start application
+    pthread_mutex_lock(&controller_lock);
     char command[FIELD_SIZE];
     sprintf(command,
             "-1 dynamic:20000:2:1:0:2.500000:10000:%s:%d",
@@ -117,6 +118,7 @@ void request_execution(struct task *task, int task_index) {
     // Send command to load kernel
     sprintf(command, "%d 1 iocmd:5", task->flexmpi_id);
     send_controller_instruction(command, 1);
+    pthread_mutex_unlock(&controller_lock);
 
     pthread_mutex_unlock(&nodes_lock);
 }

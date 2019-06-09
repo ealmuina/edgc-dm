@@ -249,6 +249,7 @@ void *updater_func(void *args) {
                 strcpy(hostname, node->hostname);
                 pthread_mutex_unlock(&nodes_lock);
 
+                pthread_mutex_lock(&controller_lock);
                 int times = 0;
                 while (diff) {
                     // Keep trying until the number of processes is synchronized with FlexMPI
@@ -276,6 +277,7 @@ void *updater_func(void *args) {
                 // Deactivate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
                 send_controller_instruction(buffer, 0);
+                pthread_mutex_unlock(&controller_lock);
 
                 if (delta < 0) {
                     sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname, -delta);
@@ -301,6 +303,8 @@ void start_monitor(double max_load, double load_epsilon) {
     else LOAD_EPSILON = 0.025;
 
     pthread_mutex_init(&nodes_lock, NULL);
+    pthread_mutex_init(&controller_lock, NULL);
+
     pthread_t monitor, updater;
     pthread_create(&monitor, NULL, monitor_func, NULL);
     pthread_create(&updater, NULL, updater_func, NULL);
