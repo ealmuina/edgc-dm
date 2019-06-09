@@ -229,6 +229,8 @@ void *updater_func(void *args) {
 
             // Send signal to modify the number of processes
             if (delta) {
+                pthread_mutex_lock(&controller_lock);
+
                 // Activate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
                 send_controller_instruction(buffer, -1);
@@ -249,7 +251,6 @@ void *updater_func(void *args) {
                 strcpy(hostname, node->hostname);
                 pthread_mutex_unlock(&nodes_lock);
 
-                pthread_mutex_lock(&controller_lock);
                 int times = 0;
                 while (diff) {
                     // Keep trying until the number of processes is synchronized with FlexMPI
@@ -266,12 +267,15 @@ void *updater_func(void *args) {
                     diff = task_processes - atoi(procs);
 
                     if (++times > 200) {
-                        // Try again switching monitoring off and on
-                        sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
-                        send_controller_instruction(buffer, -1);
+                        // Kill task
+                        sprintf(buffer, "%d 5", task.flexmpi_id);
+                        send_controller_instruction(buffer, 1);
 
-                        sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
-                        send_controller_instruction(buffer, -1);
+                        pthread_mutex_lock(&tasks_lock);
+                        finish_task(task.id);
+                        pthread_mutex_unlock(&tasks_lock);
+
+                        break;
                     }
                 }
                 // Deactivate monitoring in FlexMPI controller
@@ -279,13 +283,19 @@ void *updater_func(void *args) {
                 send_controller_instruction(buffer, -1);
                 pthread_mutex_unlock(&controller_lock);
 
-                if (delta < 0) {
-                    sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname, -delta);
-                    print_log(buffer, 3);
+                if (times > 200) { // Task was killed
+                    sprintf(buffer, "Killed task %d.", task.id);
+                    print_log(buffer, 0);
                 } else {
-                    sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", task.id, hostname,
-                            delta);
-                    print_log(buffer, 4);
+                    if (delta < 0) {
+                        sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname,
+                                -delta);
+                        print_log(buffer, 3);
+                    } else {
+                        sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", task.id, hostname,
+                                delta);
+                        print_log(buffer, 4);
+                    }
                 }
             } else {
                 pthread_mutex_unlock(&nodes_lock);

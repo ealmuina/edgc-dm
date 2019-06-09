@@ -45,6 +45,8 @@ int validate_task(struct task *task);
 
 void request_execution(struct task *task, int task_index);
 
+void finish_task(int task_index);
+
 int process_task(int id);
 
 #endif //EDGC_DM_TASK_H

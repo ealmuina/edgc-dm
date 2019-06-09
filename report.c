@@ -38,22 +38,17 @@ void *report_func(void *args) {
         system(tasks[index].pack);
         sprintf(buffer, "%s/%s?taskId=%d&domainId=%d", repository_url, REPORT_URL, tasks[index].id, domain_id);
         upload(buffer, tasks[index].output);
-        tasks[index].active = 0;
 
         // Report to log
         sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
         print_log(buffer, 5);
-        pthread_mutex_unlock(&tasks_lock);
 
-        // Clean processes information regarding that task in all nodes
+        // Clean data structures referring to the task
         pthread_mutex_lock(&nodes_lock);
-        for (int i = 0; i < NODES_MAX; ++i) {
-            if (nodes[i].active) {
-                nodes[i].processes[index] = 0;
-                nodes[i].root_task[index] = 0;
-            }
-        }
+        finish_task(index);
         pthread_mutex_unlock(&nodes_lock);
+
+        pthread_mutex_unlock(&tasks_lock);
     }
 #pragma clang diagnostic pop
 }

@@ -123,6 +123,19 @@ void request_execution(struct task *task, int task_index) {
     pthread_mutex_unlock(&nodes_lock);
 }
 
+void finish_task(int task_index) {
+    // Set task as inactive
+    tasks[task_index].active = 0;
+
+    // Clean processes information regarding that task in all nodes
+    for (int i = 0; i < NODES_MAX; ++i) {
+        if (nodes[i].active) {
+            nodes[i].processes[task_index] = 0;
+            nodes[i].root_task[task_index] = 0;
+        }
+    }
+}
+
 int process_task(int id) {
     char buffer[BUFFER_SIZE];
 
