@@ -128,8 +128,9 @@ void request_execution(struct task *task, int task_index) {
     // Send command to load kernel
     sprintf(command, "%d 1 iocmd:5", task->flexmpi_id);
     send_controller_instruction(command, 1);
-    pthread_mutex_unlock(&controller_lock);
+    sleep(60 - FLEXMPI_INTERVAL); // Wait 1 minute before sending more instructions
 
+    pthread_mutex_unlock(&controller_lock);
     pthread_mutex_unlock(&nodes_lock);
 }
 
