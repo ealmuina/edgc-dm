@@ -267,13 +267,13 @@ void *updater_func(void *args) {
 
                     diff = task_processes - atoi(procs);
 
-                    if (++times > 90) {
+                    if (++times > 180) {
                         // Kill task
-                        sprintf(buffer, "%d 5", task.flexmpi_id);
+                        sprintf(buffer, "%d 0 5", task.flexmpi_id);
                         send_controller_instruction(buffer, 1);
 
                         pthread_mutex_lock(&tasks_lock);
-                        finish_task(task.id);
+                        finish_task(task_index);
                         pthread_mutex_unlock(&tasks_lock);
 
                         break;
@@ -284,7 +284,7 @@ void *updater_func(void *args) {
                 send_controller_instruction(buffer, -1);
                 pthread_mutex_unlock(&controller_lock);
 
-                if (times > 200) { // Task was killed
+                if (times > 180) { // Task was killed
                     sprintf(buffer, "Killed task %d.", task.id);
                     print_log(buffer, 0);
                 } else {
