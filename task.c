@@ -123,6 +123,7 @@ void request_execution(struct task *task, int task_index) {
             nodes[root_node].processes[task_index]
     );
     send_controller_instruction(command, 1);
+    sleep(60 - FLEXMPI_INTERVAL); // Wait 1 minute before trying to load
 
     // Send command to load kernel
     sprintf(command, "%d 1 iocmd:5", task->flexmpi_id);
