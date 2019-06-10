@@ -13,6 +13,7 @@
 #define FLEXMPI_INTERVAL 20 /* Time to wait before sending commands to FlexMPI controller so it can process
                              * previous commands */
 
+int max_tasks;
 char repository_url[FIELD_SIZE];
 
 char *md5(const char *file_name);

@@ -77,6 +77,7 @@ int calculate_adjustment(struct node *node, int *task) {
             // Set delta of processes to new_processes
             delta = (int) fmin(new_processes, node->cpus - 1 - total_processes);
             delta = (int) fmin(delta, MAX_DELTA_PROCESSES);
+            delta = (int) fmin(delta, (float) node->cpus / max_tasks);
             *task = min_task;
         }
     }

@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         sprintf(repository_url, "http://%s", argv[1]);
 
     // Parse max_tasks
-    int max_tasks = 0;
+    max_tasks = 0;
     if (argc == 3)
         max_tasks = atoi(argv[2]);
     if (!max_tasks)
