@@ -37,6 +37,7 @@ struct task get_task_info(int id, long *code) {
     task.id = json_integer_value(json_object_get(root, "id"));
 
     strcpy(task.kernel, json_string_value(json_object_get(root, "kernel")));
+    strcpy(task.parameters, json_string_value(json_object_get(root, "parameters")));
     strcpy(task.input, json_string_value(json_object_get(root, "input")));
     strcpy(task.output, json_string_value(json_object_get(root, "output")));
     strcpy(task.unpack, json_string_value(json_object_get(root, "unpack")));
@@ -114,9 +115,10 @@ void request_execution(struct task *task, int task_index) {
 
     // Send command to start application
     pthread_mutex_lock(&controller_lock);
-    char command[FIELD_SIZE];
+    char command[2 * FIELD_SIZE];
     sprintf(command,
-            "-1 dynamic:20000:2:1:0:2.500000:1000:%s:%d",
+            "-1 dynamic:%s:%s:%d",
+            task->parameters,
             nodes[root_node].hostname,
             nodes[root_node].processes[task_index]
     );
@@ -164,6 +166,7 @@ int process_task(int id) {
             if (!tasks[i].active) {
                 tasks[i].id = task.id;
                 strcpy(tasks[i].kernel, task.kernel);
+                strcpy(tasks[i].parameters, task.parameters);
                 strcpy(tasks[i].input, task.input);
                 strcpy(tasks[i].output, task.output);
                 strcpy(tasks[i].pack, task.pack);

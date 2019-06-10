@@ -25,7 +25,7 @@
 #define TASK_URL "api/task"
 
 struct task {
-    char kernel[FIELD_SIZE];
+    char kernel[FIELD_SIZE], parameters[FIELD_SIZE];
     char input[FIELD_SIZE], output[FIELD_SIZE];
     char unpack[FIELD_SIZE], pack[FIELD_SIZE];
     char kernel_md5[FIELD_SIZE], input_md5[FIELD_SIZE], unpack_md5[FIELD_SIZE], pack_md5[FIELD_SIZE];
