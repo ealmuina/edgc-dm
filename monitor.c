@@ -252,7 +252,7 @@ void *updater_func(void *args) {
                 strcpy(hostname, node->hostname);
                 pthread_mutex_unlock(&nodes_lock);
 
-                int times = 0;
+                int times = 0, received_report = 0;
                 while (diff) {
                     // Keep trying until the number of processes is synchronized with FlexMPI
                     sprintf(buffer, "%d 2", task.flexmpi_id);
@@ -266,6 +266,14 @@ void *updater_func(void *args) {
                     procs = strtok_r(NULL, " ", &saveptr);
 
                     diff = task_processes - atoi(procs);
+
+                    pthread_mutex_lock(&finished_lock);
+                    if (finished[task.flexmpi_id] % MAX_TASKS) {
+                        received_report = 1;
+                        pthread_mutex_unlock(&finished_lock);
+                        break;
+                    }
+                    pthread_mutex_unlock(&finished_lock);
 
                     if (++times > 180) {
                         // Kill task
@@ -284,18 +292,21 @@ void *updater_func(void *args) {
                 send_controller_instruction(buffer, -1);
                 pthread_mutex_unlock(&controller_lock);
 
-                if (times > 180) { // Task was killed
-                    sprintf(buffer, "Killed task %d.", task.id);
-                    print_log(buffer, 0);
-                } else {
-                    if (delta < 0) {
-                        sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname,
-                                -delta);
-                        print_log(buffer, 3);
+                if (!received_report) {
+                    if (times > 180) { // Task was killed
+                        sprintf(buffer, "Killed task %d.", task.id);
+                        print_log(buffer, 0);
                     } else {
-                        sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", task.id, hostname,
-                                delta);
-                        print_log(buffer, 4);
+                        if (delta < 0) {
+                            sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname,
+                                    -delta);
+                            print_log(buffer, 3);
+                        } else {
+                            sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", task.id,
+                                    hostname,
+                                    delta);
+                            print_log(buffer, 4);
+                        }
                     }
                 }
             } else {

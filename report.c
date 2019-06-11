@@ -26,6 +26,10 @@ void *report_func(void *args) {
         recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         int id = atoi(buffer);
 
+        pthread_mutex_lock(&finished_lock);
+        finished[id % MAX_TASKS] = 1; // Tell other threads this one needs to close the task
+        pthread_mutex_unlock(&finished_lock);
+
         // Find task index
         int index;
         pthread_mutex_lock(&tasks_lock);
@@ -48,6 +52,10 @@ void *report_func(void *args) {
         finish_task(index);
         pthread_mutex_unlock(&nodes_lock);
 
+        pthread_mutex_lock(&finished_lock);
+        finished[id % MAX_TASKS] = 0; // Reset finished indicator
+        pthread_mutex_unlock(&finished_lock);
+
         pthread_mutex_unlock(&tasks_lock);
     }
 #pragma clang diagnostic pop
@@ -55,5 +63,6 @@ void *report_func(void *args) {
 
 void start_reporter(int domain_id) {
     pthread_t m;
+    pthread_mutex_init(&finished_lock, NULL);
     pthread_create(&m, NULL, report_func, &domain_id);
 }

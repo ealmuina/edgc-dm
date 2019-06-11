@@ -15,6 +15,10 @@
 #define REPORT_PORT 9911
 #define REPORT_URL "api/report"
 
+int finished[MAX_TASKS];
+
+pthread_mutex_t finished_lock;
+
 void *report_func(void *args);
 
 void start_reporter(int id);
