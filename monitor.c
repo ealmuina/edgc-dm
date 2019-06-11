@@ -160,6 +160,7 @@ void *monitor_func(void *args) {
         // Search node in the list
         int index = 0;
         pthread_mutex_lock(&nodes_lock);
+        printf("nodes_lock monitor:162\n");
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
@@ -198,6 +199,7 @@ void *monitor_func(void *args) {
             }
         }
         pthread_mutex_unlock(&nodes_lock);
+        printf("nodes monitor:201\n");
 #pragma clang diagnostic pop
     }
 }
@@ -213,9 +215,11 @@ void *updater_func(void *args) {
 
         for (int i = 0; i < NODES_MAX; ++i) {
             pthread_mutex_lock(&nodes_lock);
+            printf("nodes_lock monitor:217\n");
 
             if (!nodes[i].active) {
                 pthread_mutex_unlock(&nodes_lock);
+                printf("nodes monitor:221\n");
                 continue; // Skip inactive nodes
             }
 
@@ -224,13 +228,16 @@ void *updater_func(void *args) {
 
             // Get a task to adjust and its processes delta for this node
             pthread_mutex_lock(&tasks_lock);
+            printf("tasks_lock monitor:230\n");
             delta = calculate_adjustment(node, &task_index);
             struct task task = tasks[task_index];
             pthread_mutex_unlock(&tasks_lock);
+            printf("tasks_lock monitor:234\n");
 
             // Send signal to modify the number of processes
             if (delta) {
                 pthread_mutex_lock(&controller_lock);
+                printf("controller_lock monitor:239\n");
 
                 // Activate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
@@ -251,6 +258,7 @@ void *updater_func(void *args) {
                 char hostname[FIELD_SIZE];
                 strcpy(hostname, node->hostname);
                 pthread_mutex_unlock(&nodes_lock);
+                printf("nodes monitor:260\n");
 
                 int times = 0, received_report = 0;
                 while (diff) {
@@ -268,12 +276,15 @@ void *updater_func(void *args) {
                     diff = task_processes - atoi(procs);
 
                     pthread_mutex_lock(&finished_lock);
+                    printf("finished_lock monitor:278\n");
                     if (finished[task.flexmpi_id] % MAX_TASKS) {
                         received_report = 1;
                         pthread_mutex_unlock(&finished_lock);
+                        printf("finished monitor:282\n");
                         break;
                     }
                     pthread_mutex_unlock(&finished_lock);
+                    printf("finished monitor:286\n");
 
                     if (++times > 180) {
                         // Kill task
@@ -281,8 +292,10 @@ void *updater_func(void *args) {
                         send_controller_instruction(buffer, 1);
 
                         pthread_mutex_lock(&tasks_lock);
+                        printf("tasks_lock monitor:294\n");
                         finish_task(task_index);
                         pthread_mutex_unlock(&tasks_lock);
+                        printf("tasks_lock monitor:297\n");
 
                         break;
                     }
@@ -291,6 +304,7 @@ void *updater_func(void *args) {
                 sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
                 send_controller_instruction(buffer, -1);
                 pthread_mutex_unlock(&controller_lock);
+                printf("controller monitor:306\n");
 
                 if (!received_report) {
                     if (times > 180) { // Task was killed
@@ -311,6 +325,7 @@ void *updater_func(void *args) {
                 }
             } else {
                 pthread_mutex_unlock(&nodes_lock);
+                printf("nodes monitor:327\n");
             }
         }
     }

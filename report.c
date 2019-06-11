@@ -27,12 +27,15 @@ void *report_func(void *args) {
         int id = atoi(buffer);
 
         pthread_mutex_lock(&finished_lock);
+        printf("finished_lock report:29\n");
         finished[id % MAX_TASKS] = 1; // Tell other threads this one needs to close the task
         pthread_mutex_unlock(&finished_lock);
+        printf("finished report:32\n");
 
         // Find task index
         int index;
         pthread_mutex_lock(&tasks_lock);
+        printf("tasks_lock report:37\n");
         for (index = 0; index < TASKS_MAX; ++index) {
             if (tasks[index].active && tasks[index].flexmpi_id == id)
                 break;
@@ -49,14 +52,19 @@ void *report_func(void *args) {
 
         // Clean data structures referring to the task
         pthread_mutex_lock(&nodes_lock);
+        printf("nodes_lock report:54\n");
         finish_task(index);
         pthread_mutex_unlock(&nodes_lock);
+        printf("nodes report:57\n");
 
         pthread_mutex_lock(&finished_lock);
+        printf("finished report:60\n");
         finished[id % MAX_TASKS] = 0; // Reset finished indicator
         pthread_mutex_unlock(&finished_lock);
+        printf("finished report:63\n");
 
         pthread_mutex_unlock(&tasks_lock);
+        printf("tasks report:66\n");
     }
 #pragma clang diagnostic pop
 }
