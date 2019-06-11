@@ -2,10 +2,12 @@
 
 void *report_func(void *args) {
     char buffer[FIELD_SIZE];
-    int domain_id = *(int *) args;
     int sockfd;
     socklen_t len;
     struct sockaddr_in serv_addr, cli_addr;
+
+    int domain_id = *(int *) args;
+    free(args);
 
     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -72,5 +74,8 @@ void *report_func(void *args) {
 void start_reporter(int domain_id) {
     pthread_t m;
     pthread_mutex_init(&finished_lock, NULL);
-    pthread_create(&m, NULL, report_func, &domain_id);
+
+    int *id = malloc(sizeof(int));
+    *id = domain_id;
+    pthread_create(&m, NULL, report_func, id);
 }
