@@ -273,7 +273,7 @@ void *updater_func(void *args) {
                 int delta = adjustments[i].delta;
                 nodes[i].processes[task_index] += delta; // Update node information
 
-                if (!task_index) {
+                if (!adjust[task_index]) {
                     //Add command header
                     sprintf(commands[task_index], "%d 0 6:", tasks[task_index].flexmpi_id);
                     adjust[task_index] = 1;
