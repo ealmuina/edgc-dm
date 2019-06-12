@@ -85,6 +85,44 @@ int calculate_adjustment(struct node *node, int *task) {
     return delta;
 }
 
+void build_adjustments(struct adjustment *adjustments) {
+    char buffer[FIELD_SIZE];
+
+    pthread_mutex_lock(&nodes_lock);
+    for (int i = 0; i < NODES_MAX; ++i) {
+
+        if (!nodes[i].active)
+            continue; // Skip inactive nodes
+
+        struct node *node = &nodes[i];
+        int delta, task_index;
+
+        // Get a task to adjust and its processes delta for this node
+        pthread_mutex_lock(&tasks_lock);
+        delta = calculate_adjustment(node, &task_index);
+        struct task task = tasks[task_index];
+        pthread_mutex_unlock(&tasks_lock);
+
+        // Send signal to modify the number of processes
+        if (delta) {
+            adjustments[i].delta = delta;
+            adjustments[i].task_index = task_index;
+
+            if (delta < 0) {
+                sprintf(buffer, "Reducing load of task %d in node '%s' by %d processes.", task.id, node->hostname,
+                        -delta);
+                print_log(buffer, 3);
+            } else {
+                sprintf(buffer, "Increasing load of task %d in node '%s' by %d processes.", task.id,
+                        node->hostname,
+                        delta);
+                print_log(buffer, 4);
+            }
+        }
+    }
+    pthread_mutex_unlock(&nodes_lock);
+}
+
 void request_full_info(int node_index) {
     int sockfd;
     struct sockaddr_in servaddr;
@@ -207,7 +245,9 @@ void *monitor_func(void *args) {
 }
 
 void *updater_func(void *args) {
-    char buffer[BUFFER_SIZE];
+    char buffer[FIELD_SIZE], commands[FIELD_SIZE][MAX_TASKS];
+    struct adjustment adjustments[NODES_MAX];
+    int adjust[MAX_TASKS];
     print_log("Updater thread initialized.", 0);
 
 #pragma clang diagnostic push
@@ -215,46 +255,57 @@ void *updater_func(void *args) {
     while (1) {
         sleep(UPDATER_INTERVAL);
 
+        memset(adjustments, 0, sizeof(adjustments));
+        memset(commands, 0, sizeof(commands));
+        memset(adjust, 0, sizeof(adjust));
+        build_adjustments(adjustments);
+
+        pthread_mutex_lock(&nodes_lock);
+        pthread_mutex_lock(&tasks_lock);
+
+        // Build commands
         for (int i = 0; i < NODES_MAX; ++i) {
-            pthread_mutex_lock(&nodes_lock);
+            if (adjustments[i].active) {
+                // Add adjustment to the corresponding command so it can be performed.
 
-            if (!nodes[i].active) {
-                pthread_mutex_unlock(&nodes_lock);
-                continue; // Skip inactive nodes
+                int task_index = adjustments[i].task_index;
+                int delta = adjustments[i].delta;
+                nodes[i].processes[task_index] += delta; // Update node information
+
+                if (!task_index) {
+                    //Add command header
+                    sprintf(commands[task_index], "%d 0 6:", tasks[task_index].flexmpi_id);
+                    adjust[task_index] = 1;
+                }
+                sprintf(buffer, "%s:%d", nodes[i].hostname, delta);
+                strcat(commands[task_index], buffer);
             }
+        }
 
-            struct node *node = &nodes[i];
-            int delta, task_index;
+        pthread_mutex_unlock(&nodes_lock);
+        pthread_mutex_unlock(&tasks_lock);
 
-            // Get a task to adjust and its processes delta for this node
-            pthread_mutex_lock(&tasks_lock);
-            delta = calculate_adjustment(node, &task_index);
-            struct task task = tasks[task_index];
-            pthread_mutex_unlock(&tasks_lock);
-
-            // Send signal to modify the number of processes
-            if (delta) {
+        // Execute commands
+        for (int i = 0; i < MAX_TASKS; ++i) {
+            if (adjust[i]) {
                 pthread_mutex_lock(&controller_lock);
+
+                pthread_mutex_lock(&tasks_lock);
+                struct task task = tasks[i];
+                pthread_mutex_unlock(&tasks_lock);
 
                 // Activate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
                 send_controller_instruction(buffer, -1);
 
                 // Send instruction to change processes
-                sprintf(buffer, "%d 0 6:%s:%d", task.flexmpi_id, node->hostname, delta);
-                send_controller_instruction(buffer, 1);
-                node->processes[task_index] += delta;
+                send_controller_instruction(commands[i], 1);
 
                 int diff = 1, task_processes = 0;
                 for (int j = 0; j < NODES_MAX; ++j) {
                     if (nodes[j].active)
-                        task_processes += nodes[j].processes[task_index]; // Store in task_processes its total processes
+                        task_processes += nodes[j].processes[i]; // Store in task_processes its total processes
                 }
-
-                // Create copy of hostname for logging and unlock the mutex
-                char hostname[FIELD_SIZE];
-                strcpy(hostname, node->hostname);
-                pthread_mutex_unlock(&nodes_lock);
 
                 int times = 0, received_report = 0;
                 while (diff) {
@@ -285,7 +336,7 @@ void *updater_func(void *args) {
                         send_controller_instruction(buffer, 1);
 
                         pthread_mutex_lock(&tasks_lock);
-                        finish_task(task_index);
+                        finish_task(i);
                         pthread_mutex_unlock(&tasks_lock);
 
                         break;
@@ -301,20 +352,10 @@ void *updater_func(void *args) {
                         sprintf(buffer, "Killed task %d.", task.id);
                         print_log(buffer, 0);
                     } else {
-                        if (delta < 0) {
-                            sprintf(buffer, "Reduced load of task %d in node '%s' by %d processes.", task.id, hostname,
-                                    -delta);
-                            print_log(buffer, 3);
-                        } else {
-                            sprintf(buffer, "Increased load of task %d in node '%s' by %d processes.", task.id,
-                                    hostname,
-                                    delta);
-                            print_log(buffer, 4);
-                        }
+                        sprintf(buffer, "Updated load for task %d.", task.id);
+                        print_log(buffer, 0);
                     }
                 }
-            } else {
-                pthread_mutex_unlock(&nodes_lock);
             }
         }
     }

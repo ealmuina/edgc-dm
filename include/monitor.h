@@ -35,6 +35,10 @@ struct node {
     time_t last_seen;
 };
 
+struct adjustment {
+    int task_index, delta, active;
+};
+
 int total_cpus;
 
 struct node nodes[NODES_MAX];
