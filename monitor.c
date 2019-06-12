@@ -19,12 +19,12 @@ void initialize_socket(int *sockfd, int port) {
 
 int calculate_adjustment(struct node *node, int *task) {
     // Get the total, max and min of processes
-    int total_processes = 0, min_processes = INT32_MAX, max_processes = INT32_MIN;
+    int local_processes = 0, min_processes = INT32_MAX, max_processes = INT32_MIN;
     int min_task = -1, max_task = -1;
     for (int i = 0; i < MAX_TASKS; ++i) {
         // Consider only active tasks
         if (tasks[i].active) {
-            total_processes += node->processes[i];
+            local_processes += node->processes[i];
             /* Task with the most processes will only be used to decrease them if necessary
              * The number of processes on root hosts cannot be below its initial value
              * -> So tasks will only be taken into into account for this variable only if the node is non-root for them
@@ -47,8 +47,8 @@ int calculate_adjustment(struct node *node, int *task) {
     int delta = 0;
 
     // Check if load needs to be reduced
-    if (node->cpu_load > MAX_LOAD && total_processes) {
-        float process_load = node->cpu_load / total_processes;
+    if (node->cpu_load > MAX_LOAD && local_processes) {
+        float process_load = node->cpu_load / local_processes;
 
         // Set delta to get the processes to the middle of the interval [MAX_LOAD - LOAD_EPSILON, MAX_LOAD]
         float goal_load = (MAX_LOAD + MAX_LOAD - LOAD_EPSILON) / 2; // Value between max and min loads allowed
@@ -60,10 +60,10 @@ int calculate_adjustment(struct node *node, int *task) {
             delta = (int) fmax(delta, ROOT_PROCESSES - node->processes[max_task]);
     }
         // Check if load could be increased
-    else if (node->cpu_load < MAX_LOAD - LOAD_EPSILON && total_processes < node->cpus - 1) {
+    else if (node->cpu_load < MAX_LOAD - LOAD_EPSILON && local_processes < node->cpus - 1) {
         float process_load;
-        if (total_processes)
-            process_load = node->cpu_load / total_processes;
+        if (local_processes)
+            process_load = node->cpu_load / local_processes;
         else
             process_load = 0.25;
 
@@ -75,9 +75,9 @@ int calculate_adjustment(struct node *node, int *task) {
         // Increase if new_processes > 0
         if (new_processes > 0) {
             // Set delta of processes to new_processes
-            delta = (int) fmin(new_processes, node->cpus - 1 - total_processes);
+            delta = (int) fmin(new_processes, node->cpus - 1 - local_processes);
             delta = (int) fmin(delta, MAX_DELTA_PROCESSES);
-            delta = (int) fmin(delta, (float) node->cpus / max_tasks);
+            delta = (int) fmin(delta, (float) total_cpus / max_tasks);
             *task = min_task;
         }
     }
@@ -181,6 +181,9 @@ void *monitor_func(void *args) {
                 // Request node full information
                 strcpy(nodes[index].hostname, hostname);
                 request_full_info(index);
+
+                // Update total CPUs
+                total_cpus += nodes[index].cpus;
             }
 
             nodes[index].active = 1;
@@ -191,6 +194,7 @@ void *monitor_func(void *args) {
             for (int i = 0; i < NODES_MAX; ++i) {
                 if (nodes[i].active && difftime(now, nodes[i].last_seen) > TIMEOUT) {
                     nodes[i].active = 0;
+                    total_cpus -= nodes[i].cpus; // Update total CPUs
                     sprintf(buffer, "Removed node '%s' after being inactive for %d seconds.", nodes[i].hostname,
                             TIMEOUT);
                     print_log(buffer, 0);

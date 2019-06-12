@@ -35,6 +35,8 @@ struct node {
     time_t last_seen;
 };
 
+int total_cpus;
+
 struct node nodes[NODES_MAX];
 
 pthread_mutex_t nodes_lock, controller_lock;
