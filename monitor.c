@@ -101,10 +101,10 @@ void build_adjustments(struct adjustment *adjustments) {
         pthread_mutex_lock(&tasks_lock);
         delta = calculate_adjustment(node, &task_index);
         struct task task = tasks[task_index];
-        pthread_mutex_unlock(&tasks_lock);
 
         // Send signal to modify the number of processes
         if (delta) {
+            adjustments[i].active = 1;
             adjustments[i].delta = delta;
             adjustments[i].task_index = task_index;
 
@@ -119,6 +119,7 @@ void build_adjustments(struct adjustment *adjustments) {
                 print_log(buffer, 4);
             }
         }
+        pthread_mutex_unlock(&tasks_lock);
     }
     pthread_mutex_unlock(&nodes_lock);
 }
