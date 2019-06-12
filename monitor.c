@@ -246,7 +246,7 @@ void *monitor_func(void *args) {
 }
 
 void *updater_func(void *args) {
-    char buffer[FIELD_SIZE], commands[FIELD_SIZE][MAX_TASKS];
+    char buffer[BUFFER_SIZE], commands[FIELD_SIZE][MAX_TASKS];
     struct adjustment adjustments[NODES_MAX];
     int adjust[MAX_TASKS];
     print_log("Updater thread initialized.", 0);
@@ -316,7 +316,8 @@ void *updater_func(void *args) {
 
                     socklen_t len;
                     struct sockaddr_in cli_addr;
-                    recvfrom(controller_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+                    int n = recvfrom(controller_sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
+                    buffer[n] = '\0';
                     char *saveptr, *procs;
                     strtok_r(buffer, " ", &saveptr);
                     procs = strtok_r(NULL, " ", &saveptr);
