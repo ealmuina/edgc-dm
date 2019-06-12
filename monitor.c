@@ -275,10 +275,10 @@ void *updater_func(void *args) {
 
                 if (!adjust[task_index]) {
                     //Add command header
-                    sprintf(commands[task_index], "%d 0 6:", tasks[task_index].flexmpi_id);
+                    sprintf(commands[task_index], "%d 0 6", tasks[task_index].flexmpi_id);
                     adjust[task_index] = 1;
                 }
-                sprintf(buffer, "%s:%d", nodes[i].hostname, delta);
+                sprintf(buffer, ":%s:%d", nodes[i].hostname, delta);
                 strcat(commands[task_index], buffer);
             }
         }
