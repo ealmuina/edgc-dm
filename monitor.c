@@ -325,7 +325,7 @@ void *updater_func(void *args) {
                     diff = task_processes - atoi(procs);
 
                     pthread_mutex_lock(&finished_lock);
-                    if (finished[task.flexmpi_id] % MAX_TASKS) {
+                    if (finished[task.flexmpi_id % MAX_TASKS]) {
                         received_report = 1;
                         pthread_mutex_unlock(&finished_lock);
                         break;
