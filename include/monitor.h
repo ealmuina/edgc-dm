@@ -49,9 +49,13 @@ void initialize_socket(int *sockfd, int port);
 
 int calculate_adjustment(struct node *node, int *task);
 
-void *updater_func(void *args);
+void build_adjustments(struct adjustment *adjustments);
+
+void request_full_info(int node_index);
 
 void *monitor_func(void *args);
+
+void *updater_func(void *args);
 
 void start_monitor(double max_load, double load_epsilon);
 

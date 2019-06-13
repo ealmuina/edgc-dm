@@ -290,10 +290,9 @@ void *updater_func(void *args) {
         for (int i = 0; i < MAX_TASKS; ++i) {
             if (adjust[i]) {
                 pthread_mutex_lock(&controller_lock);
-
                 pthread_mutex_lock(&tasks_lock);
+
                 struct task task = tasks[i];
-                pthread_mutex_unlock(&tasks_lock);
 
                 // Activate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
@@ -347,6 +346,8 @@ void *updater_func(void *args) {
                 // Deactivate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
                 send_controller_instruction(buffer, -1);
+
+                pthread_mutex_unlock(&tasks_lock);
                 pthread_mutex_unlock(&controller_lock);
 
                 if (!received_report) {
