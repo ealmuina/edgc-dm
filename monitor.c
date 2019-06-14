@@ -336,10 +336,7 @@ void *updater_func(void *args) {
                         sprintf(buffer, "%d 0 5", task.flexmpi_id);
                         send_controller_instruction(buffer, 1);
 
-                        pthread_mutex_lock(&tasks_lock);
                         finish_task(i);
-                        pthread_mutex_unlock(&tasks_lock);
-
                         break;
                     }
                 }
