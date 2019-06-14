@@ -12,6 +12,7 @@
 #include "utils.h"
 #include "task.h"
 
+#define TASKS_MAX 1024
 #define REPORT_PORT 9911
 #define REPORT_URL "api/report"
 
