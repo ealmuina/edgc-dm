@@ -29,34 +29,36 @@ void *report_func(void *args) {
         int id = atoi(buffer);
 
         pthread_mutex_lock(&finished_lock);
-        finished[id % MAX_TASKS] = 1; // Tell other threads this one needs to close the task
+        finished[id % TASKS_MAX] = 1; // Tell other threads this one needs to close the task
         pthread_mutex_unlock(&finished_lock);
 
         // Find task index
-        int index;
+        int index = 0;
         pthread_mutex_lock(&tasks_lock);
         for (index = 0; index < TASKS_MAX; ++index) {
             if (tasks[index].active && tasks[index].flexmpi_id == id)
                 break;
         }
 
-        // Report task and set it to inactive
-        system(tasks[index].pack);
-        sprintf(buffer, "%s/%s?taskId=%d&domainId=%d", repository_url, REPORT_URL, tasks[index].id, domain_id);
-        upload(buffer, tasks[index].output);
+        if (index < TASKS_MAX) {
+            // Report task and set it to inactive
+            system(tasks[index].pack);
+            sprintf(buffer, "%s/%s?taskId=%d&domainId=%d", repository_url, REPORT_URL, tasks[index].id, domain_id);
+            upload(buffer, tasks[index].output);
 
-        // Report to log
-        sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
-        print_log(buffer, 5);
+            // Report to log
+            sprintf(buffer, "Result of task %d successfully reported.", tasks[index].id);
+            print_log(buffer, 5);
 
-        // Clean data structures referring to the task
-        pthread_mutex_lock(&nodes_lock);
-        finish_task(index);
-        pthread_mutex_unlock(&nodes_lock);
+            // Clean data structures referring to the task
+            pthread_mutex_lock(&nodes_lock);
+            finish_task(index);
+            pthread_mutex_unlock(&nodes_lock);
 
-        pthread_mutex_lock(&finished_lock);
-        finished[id % MAX_TASKS] = 0; // Reset finished indicator
-        pthread_mutex_unlock(&finished_lock);
+            pthread_mutex_lock(&finished_lock);
+            finished[id % TASKS_MAX] = 0; // Reset finished indicator
+            pthread_mutex_unlock(&finished_lock);
+        }
 
         pthread_mutex_unlock(&tasks_lock);
     }

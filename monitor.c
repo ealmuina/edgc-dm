@@ -21,7 +21,7 @@ int calculate_adjustment(struct node *node, int *task) {
     // Get the total, max and min of processes
     int local_processes = 0, min_processes = INT32_MAX, max_processes = INT32_MIN;
     int min_task = -1, max_task = -1;
-    for (int i = 0; i < MAX_TASKS; ++i) {
+    for (int i = 0; i < TASKS_MAX; ++i) {
         // Consider only active tasks
         if (tasks[i].active) {
             local_processes += node->processes[i];
@@ -246,9 +246,9 @@ void *monitor_func(void *args) {
 }
 
 void *updater_func(void *args) {
-    char buffer[BUFFER_SIZE], commands[FIELD_SIZE][MAX_TASKS];
+    char buffer[BUFFER_SIZE], commands[FIELD_SIZE][TASKS_MAX];
     struct adjustment adjustments[NODES_MAX];
-    int adjust[MAX_TASKS];
+    int adjust[TASKS_MAX];
     print_log("Updater thread initialized.", 0);
 
 #pragma clang diagnostic push
@@ -287,7 +287,7 @@ void *updater_func(void *args) {
         pthread_mutex_unlock(&tasks_lock);
 
         // Execute commands
-        for (int i = 0; i < MAX_TASKS; ++i) {
+        for (int i = 0; i < TASKS_MAX; ++i) {
             if (adjust[i]) {
                 pthread_mutex_lock(&controller_lock);
                 pthread_mutex_lock(&tasks_lock);
@@ -324,7 +324,7 @@ void *updater_func(void *args) {
                     diff = task_processes - atoi(procs);
 
                     pthread_mutex_lock(&finished_lock);
-                    if (finished[task.flexmpi_id % MAX_TASKS]) {
+                    if (finished[task.flexmpi_id % TASKS_MAX]) {
                         received_report = 1;
                         pthread_mutex_unlock(&finished_lock);
                         break;

@@ -13,6 +13,7 @@
 #include <netdb.h>
 
 #include "utils.h"
+#include "task.h"
 
 #define TIMEOUT 600
 #define NODES_MAX 1024
@@ -20,7 +21,6 @@
 #define MONITOR_LITE_PORT 9910
 #define MONITOR_FULL_PORT 9913
 #define CONTROLLER_PORT 9912
-#define MAX_TASKS 1024
 #define MAX_DELTA_PROCESSES 100
 #define UPDATER_INTERVAL 5
 
@@ -29,8 +29,8 @@ double MAX_LOAD, LOAD_EPSILON;
 struct node {
     char stats[BUFFER_SIZE], hostname[NAME_LENGTH_MAX];
     int active, cpus;
-    int processes[MAX_TASKS]; // stores the number of processes each task has currently running in the node
-    int root_task[MAX_TASKS]; // indicates for each task whether the node is its root or not
+    int processes[TASKS_MAX]; // stores the number of processes each task has currently running in the node
+    int root_task[TASKS_MAX]; // indicates for each task whether the node is its root or not
     float cpu_load;
     time_t last_seen;
 };

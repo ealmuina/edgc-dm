@@ -15,7 +15,7 @@
 #define REPORT_PORT 9911
 #define REPORT_URL "api/report"
 
-int finished[MAX_TASKS];
+int finished[TASKS_MAX];
 
 pthread_mutex_t finished_lock;
 

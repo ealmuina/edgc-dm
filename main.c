@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     while (1) {
         int current_tasks = 0;
         pthread_mutex_lock(&tasks_lock);
-        for (int i = 0; i < MAX_TASKS; ++i) {
+        for (int i = 0; i < TASKS_MAX; ++i) {
             if (tasks[i].active) current_tasks++;
         }
         pthread_mutex_unlock(&tasks_lock);
