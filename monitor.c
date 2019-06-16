@@ -294,14 +294,6 @@ void *updater_func(void *args) {
 
                 struct task task = tasks[i];
 
-                pthread_mutex_lock(&finished_lock);
-                if (finished[task.flexmpi_id % TASKS_MAX]) {
-                    pthread_mutex_unlock(&finished_lock);
-                    adjust[i] = 0;
-                    continue;
-                }
-                pthread_mutex_unlock(&finished_lock);
-
                 // Activate monitoring in FlexMPI controller
                 sprintf(buffer, "%d 0 4:on", task.flexmpi_id);
                 send_controller_instruction(buffer, -1);
