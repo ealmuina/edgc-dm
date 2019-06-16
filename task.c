@@ -87,6 +87,7 @@ void request_execution(struct task *task, int task_index) {
 
     // Find the best node for starting execution in it
     pthread_mutex_lock(&nodes_lock);
+    printf("lock task:89");
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active && strcmp(hostname, nodes[i].hostname) != 0) {
             // Cores to be used will be the CPUs * free_fraction_of_load
@@ -128,6 +129,7 @@ void request_execution(struct task *task, int task_index) {
 
     pthread_mutex_unlock(&controller_lock);
     pthread_mutex_unlock(&nodes_lock);
+    printf("unlock task:131");
 }
 
 void finish_task(int task_index) {

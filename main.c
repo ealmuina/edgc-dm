@@ -24,6 +24,7 @@ int register_domain() {
     big_buffer[0] = '[';
 
     pthread_mutex_lock(&nodes_lock);
+    printf("lock main:26");
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             strcat(big_buffer, nodes[i].stats);
@@ -31,6 +32,7 @@ int register_domain() {
         }
     }
     pthread_mutex_unlock(&nodes_lock);
+    printf("unlock main:34");
     int len = strlen(big_buffer);
     if (big_buffer[len - 1] == ',')
         big_buffer[len - 1] = ']';

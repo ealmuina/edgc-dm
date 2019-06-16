@@ -28,6 +28,8 @@ void *report_func(void *args) {
         recvfrom(sockfd, buffer, FIELD_SIZE, 0, (struct sockaddr *) &cli_addr, &len);
         int id = atoi(buffer);
 
+        printf("=============== %d\n", id);
+
         pthread_mutex_lock(&finished_lock);
         finished[id % TASKS_MAX] = 1; // Tell other threads this one needs to close the task
         pthread_mutex_unlock(&finished_lock);
@@ -39,6 +41,8 @@ void *report_func(void *args) {
             if (tasks[index].active && tasks[index].flexmpi_id == id)
                 break;
         }
+
+        printf("AAAAAAAAAAAAAAAAAAAAAAAAA\n");
 
         if (index < TASKS_MAX) {
             // Report task and set it to inactive
@@ -52,8 +56,10 @@ void *report_func(void *args) {
 
             // Clean data structures referring to the task
             pthread_mutex_lock(&nodes_lock);
+            printf("lock report:54");
             finish_task(index);
             pthread_mutex_unlock(&nodes_lock);
+            printf("unlock report:57");
 
             pthread_mutex_lock(&finished_lock);
             finished[id % TASKS_MAX] = 0; // Reset finished indicator

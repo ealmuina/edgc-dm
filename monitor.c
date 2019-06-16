@@ -89,6 +89,7 @@ void build_adjustments(struct adjustment *adjustments) {
     char buffer[FIELD_SIZE];
 
     pthread_mutex_lock(&nodes_lock);
+    printf("lock monitor:91");
     for (int i = 0; i < NODES_MAX; ++i) {
 
         if (!nodes[i].active)
@@ -122,6 +123,7 @@ void build_adjustments(struct adjustment *adjustments) {
         pthread_mutex_unlock(&tasks_lock);
     }
     pthread_mutex_unlock(&nodes_lock);
+    printf("unlock monitor:125");
 }
 
 void request_full_info(int node_index) {
@@ -199,6 +201,7 @@ void *monitor_func(void *args) {
         // Search node in the list
         int index = 0;
         pthread_mutex_lock(&nodes_lock);
+        printf("lock monitor:202");
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
@@ -241,6 +244,7 @@ void *monitor_func(void *args) {
             }
         }
         pthread_mutex_unlock(&nodes_lock);
+        printf("unlock monitor:246");
 #pragma clang diagnostic pop
     }
 }
@@ -262,6 +266,7 @@ void *updater_func(void *args) {
         build_adjustments(adjustments);
 
         pthread_mutex_lock(&nodes_lock);
+        printf("lock monitor:266");
         pthread_mutex_lock(&tasks_lock);
 
         // Build commands
@@ -284,6 +289,7 @@ void *updater_func(void *args) {
         }
 
         pthread_mutex_unlock(&nodes_lock);
+        printf("unlock monitor:291");
         pthread_mutex_unlock(&tasks_lock);
 
         // Execute commands
