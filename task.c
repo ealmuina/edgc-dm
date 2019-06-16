@@ -78,9 +78,6 @@ int validate_task(struct task *task) {
 void request_execution(struct task *task, int task_index) {
     int root_node = 0, max_cores = -1;
 
-    // Execute unpacking script
-    system(task->unpack);
-
     // Read name of localhost to avoid starting applications in it
     char hostname[FIELD_SIZE];
     FILE *file = fopen("/etc/hostname", "r");
@@ -191,10 +188,16 @@ int process_task(int id) {
             if (validate_task(&task)) {
                 sprintf(buffer, "Task %d downloaded correctly.", task.id);
                 print_log(buffer, 0);
-                request_execution(&task, i);
-                sprintf(buffer, "Requested execution of task %d.", task.id);
-                print_log(buffer, 2);
-                return 0;
+
+                // Execute unpacking script
+                int result = system(task.unpack);
+                if (result == 0) {
+                    request_execution(&task, i);
+                    sprintf(buffer, "Requested execution of task %d.", task.id);
+                    print_log(buffer, 2);
+                    return 0;
+                }
+                return -3;
             } else {
                 sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);
                 print_log(buffer, 0);
