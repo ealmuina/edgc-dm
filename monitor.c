@@ -88,8 +88,8 @@ int calculate_adjustment(struct node *node, int *task) {
 void build_adjustments(struct adjustment *adjustments) {
     char buffer[FIELD_SIZE];
 
+    pthread_mutex_lock(&tasks_lock);
     pthread_mutex_lock(&nodes_lock);
-    printf("lock monitor:91\n");
     for (int i = 0; i < NODES_MAX; ++i) {
 
         if (!nodes[i].active)
@@ -99,7 +99,6 @@ void build_adjustments(struct adjustment *adjustments) {
         int delta, task_index;
 
         // Get a task to adjust and its processes delta for this node
-        pthread_mutex_lock(&tasks_lock);
         delta = calculate_adjustment(node, &task_index);
         struct task task = tasks[task_index];
 
@@ -120,10 +119,9 @@ void build_adjustments(struct adjustment *adjustments) {
                 print_log(buffer, 4);
             }
         }
-        pthread_mutex_unlock(&tasks_lock);
     }
     pthread_mutex_unlock(&nodes_lock);
-    printf("unlock monitor:125\n");
+    pthread_mutex_unlock(&tasks_lock);
 }
 
 void request_full_info(int node_index) {
@@ -201,7 +199,6 @@ void *monitor_func(void *args) {
         // Search node in the list
         int index = 0;
         pthread_mutex_lock(&nodes_lock);
-        printf("lock monitor:202\n");
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
@@ -244,7 +241,6 @@ void *monitor_func(void *args) {
             }
         }
         pthread_mutex_unlock(&nodes_lock);
-        printf("unlock monitor:246\n");
 #pragma clang diagnostic pop
     }
 }
@@ -266,7 +262,6 @@ void *updater_func(void *args) {
         build_adjustments(adjustments);
 
         pthread_mutex_lock(&nodes_lock);
-        printf("lock monitor:266\n");
         pthread_mutex_lock(&tasks_lock);
 
         // Build commands
@@ -289,7 +284,6 @@ void *updater_func(void *args) {
         }
 
         pthread_mutex_unlock(&nodes_lock);
-        printf("unlock monitor:291\n");
         pthread_mutex_unlock(&tasks_lock);
 
         // Execute commands

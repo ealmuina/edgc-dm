@@ -56,10 +56,8 @@ void *report_func(void *args) {
 
             // Clean data structures referring to the task
             pthread_mutex_lock(&nodes_lock);
-            printf("lock report:54\n");
             finish_task(index);
             pthread_mutex_unlock(&nodes_lock);
-            printf("unlock report:57\n");
 
             pthread_mutex_lock(&finished_lock);
             finished[id % TASKS_MAX] = 0; // Reset finished indicator
