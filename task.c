@@ -86,7 +86,7 @@ void request_execution(struct task *task, int task_index) {
     fclose(file);
 
     // Find the best node for starting execution in it
-    pthread_mutex_lock(&nodes_lock);
+    pthread_mutex_lock(&arrays_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active && strcmp(hostname, nodes[i].hostname) != 0) {
             // Cores to be used will be the CPUs * free_fraction_of_load
@@ -105,10 +105,8 @@ void request_execution(struct task *task, int task_index) {
     nodes[root_node].root_task[task_index] = 1;
 
     // Activate task and set its flexmpi_id
-    pthread_mutex_lock(&tasks_lock);
     tasks[task_index].active = task->active = 1;
     tasks[task_index].flexmpi_id = task->flexmpi_id = FLEXMPI_ID++;
-    pthread_mutex_unlock(&tasks_lock);
 
     // Send command to start application
     pthread_mutex_lock(&controller_lock);
@@ -127,7 +125,7 @@ void request_execution(struct task *task, int task_index) {
     send_controller_instruction(command, 1);
 
     pthread_mutex_unlock(&controller_lock);
-    pthread_mutex_unlock(&nodes_lock);
+    pthread_mutex_unlock(&arrays_lock);
 }
 
 void finish_task(int task_index) {
@@ -159,7 +157,7 @@ int process_task(int id) {
 
         // Save task
         int i;
-        pthread_mutex_lock(&tasks_lock);
+        pthread_mutex_lock(&arrays_lock);
         for (i = 0; i < TASKS_MAX; ++i) {
             if (!tasks[i].active) {
                 tasks[i].id = task.id;
@@ -176,7 +174,7 @@ int process_task(int id) {
                 break;
             }
         }
-        pthread_mutex_unlock(&tasks_lock);
+        pthread_mutex_unlock(&arrays_lock);
 
         if (i != TASKS_MAX) {
             // Download task files
@@ -202,9 +200,9 @@ int process_task(int id) {
                 sprintf(buffer, "Task %d corrupted. It will be cancelled.", task.id);
                 print_log(buffer, 0);
                 // Set task space status to inactive
-                pthread_mutex_lock(&tasks_lock);
+                pthread_mutex_lock(&arrays_lock);
                 tasks[i].active = 0;
-                pthread_mutex_unlock(&tasks_lock);
+                pthread_mutex_unlock(&arrays_lock);
                 return -2;
             }
         } else {

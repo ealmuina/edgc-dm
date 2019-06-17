@@ -88,8 +88,7 @@ int calculate_adjustment(struct node *node, int *task) {
 void build_adjustments(struct adjustment *adjustments) {
     char buffer[FIELD_SIZE];
 
-    pthread_mutex_lock(&tasks_lock);
-    pthread_mutex_lock(&nodes_lock);
+    pthread_mutex_lock(&arrays_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
 
         if (!nodes[i].active)
@@ -120,8 +119,7 @@ void build_adjustments(struct adjustment *adjustments) {
             }
         }
     }
-    pthread_mutex_unlock(&nodes_lock);
-    pthread_mutex_unlock(&tasks_lock);
+    pthread_mutex_unlock(&arrays_lock);
 }
 
 void request_full_info(int node_index) {
@@ -198,7 +196,7 @@ void *monitor_func(void *args) {
 
         // Search node in the list
         int index = 0;
-        pthread_mutex_lock(&nodes_lock);
+        pthread_mutex_lock(&arrays_lock);
         for (int i = 0; i < NODES_MAX; ++i) {
             if (nodes[index].active) index = i; // index will be the first empty position
             if (nodes[i].active && strcmp(nodes[i].hostname, hostname) == 0) {
@@ -240,7 +238,7 @@ void *monitor_func(void *args) {
                 }
             }
         }
-        pthread_mutex_unlock(&nodes_lock);
+        pthread_mutex_unlock(&arrays_lock);
 #pragma clang diagnostic pop
     }
 }
@@ -261,8 +259,7 @@ void *updater_func(void *args) {
         memset(adjust, 0, sizeof(adjust));
         build_adjustments(adjustments);
 
-        pthread_mutex_lock(&nodes_lock);
-        pthread_mutex_lock(&tasks_lock);
+        pthread_mutex_lock(&arrays_lock);
 
         // Build commands
         for (int i = 0; i < NODES_MAX; ++i) {
@@ -283,14 +280,13 @@ void *updater_func(void *args) {
             }
         }
 
-        pthread_mutex_unlock(&nodes_lock);
-        pthread_mutex_unlock(&tasks_lock);
+        pthread_mutex_unlock(&arrays_lock);
 
         // Execute commands
         for (int i = 0; i < TASKS_MAX; ++i) {
             if (adjust[i]) {
                 pthread_mutex_lock(&controller_lock);
-                pthread_mutex_lock(&tasks_lock);
+                pthread_mutex_lock(&arrays_lock);
 
                 struct task task = tasks[i];
 
@@ -352,7 +348,7 @@ void *updater_func(void *args) {
                 sprintf(buffer, "%d 0 4:off", task.flexmpi_id);
                 send_controller_instruction(buffer, -1);
 
-                pthread_mutex_unlock(&tasks_lock);
+                pthread_mutex_unlock(&arrays_lock);
                 pthread_mutex_unlock(&controller_lock);
 
                 if (!received_report) {
@@ -377,7 +373,7 @@ void start_monitor(double max_load, double load_epsilon) {
     if (load_epsilon) LOAD_EPSILON = load_epsilon;
     else LOAD_EPSILON = 0.025;
 
-    pthread_mutex_init(&nodes_lock, NULL);
+    pthread_mutex_init(&arrays_lock, NULL);
     pthread_mutex_init(&controller_lock, NULL);
 
     pthread_t monitor, updater;

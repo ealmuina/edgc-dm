@@ -34,7 +34,7 @@ void *report_func(void *args) {
 
         // Find task index
         int index = 0;
-        pthread_mutex_lock(&tasks_lock);
+        pthread_mutex_lock(&arrays_lock);
         for (index = 0; index < TASKS_MAX; ++index) {
             if (tasks[index].active && tasks[index].flexmpi_id == id)
                 break;
@@ -51,16 +51,14 @@ void *report_func(void *args) {
             print_log(buffer, 5);
 
             // Clean data structures referring to the task
-            pthread_mutex_lock(&nodes_lock);
             finish_task(index);
-            pthread_mutex_unlock(&nodes_lock);
 
             pthread_mutex_lock(&finished_lock);
             finished[id % TASKS_MAX] = 0; // Reset finished indicator
             pthread_mutex_unlock(&finished_lock);
         }
 
-        pthread_mutex_unlock(&tasks_lock);
+        pthread_mutex_unlock(&arrays_lock);
     }
 #pragma clang diagnostic pop
 }

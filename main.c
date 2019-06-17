@@ -23,14 +23,14 @@ char big_buffer[FIELD_SIZE * BUFFER_SIZE];
 int register_domain() {
     big_buffer[0] = '[';
 
-    pthread_mutex_lock(&nodes_lock);
+    pthread_mutex_lock(&arrays_lock);
     for (int i = 0; i < NODES_MAX; ++i) {
         if (nodes[i].active) {
             strcat(big_buffer, nodes[i].stats);
             strcat(big_buffer, ",");
         }
     }
-    pthread_mutex_unlock(&nodes_lock);
+    pthread_mutex_unlock(&arrays_lock);
     int len = strlen(big_buffer);
     if (big_buffer[len - 1] == ',')
         big_buffer[len - 1] = ']';
@@ -77,9 +77,6 @@ int main(int argc, char *argv[]) {
     if (argc == 5)
         load_epsilon = atof(argv[4]);
 
-    // Initialize mutex for tasks and controller
-    pthread_mutex_init(&tasks_lock, NULL);
-
     // Initialize monitor and wait for nodes to report their statistics
     start_monitor(max_load, load_epsilon);
     print_log("Program will wait 30 seconds for recovering nodes data", 0);
@@ -98,11 +95,11 @@ int main(int argc, char *argv[]) {
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
     while (1) {
         int current_tasks = 0;
-        pthread_mutex_lock(&tasks_lock);
+        pthread_mutex_lock(&arrays_lock);
         for (int i = 0; i < TASKS_MAX; ++i) {
             if (tasks[i].active) current_tasks++;
         }
-        pthread_mutex_unlock(&tasks_lock);
+        pthread_mutex_unlock(&arrays_lock);
 
         // Process a task
         if (current_tasks < max_tasks)

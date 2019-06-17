@@ -44,7 +44,7 @@ int total_cpus;
 
 struct node nodes[NODES_MAX];
 
-pthread_mutex_t nodes_lock, controller_lock;
+pthread_mutex_t arrays_lock, controller_lock;
 
 void initialize_socket(int *sockfd, int port);
 
