@@ -54,6 +54,8 @@ void build_adjustments(struct adjustment *adjustments);
 
 void request_full_info(int node_index);
 
+void remove_node(int node_index);
+
 void *monitor_func(void *args);
 
 void *updater_func(void *args);

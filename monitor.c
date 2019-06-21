@@ -162,6 +162,29 @@ void request_full_info(int node_index) {
     close(sockfd);
 }
 
+void remove_node(int node_index) {
+    int i = node_index;
+    char buffer[FIELD_SIZE];
+
+    nodes[i].active = 0;
+    total_cpus -= nodes[i].cpus; // Update total CPUs
+
+    // Cancel tasks started in the node
+    for (int j = 0; j < TASKS_MAX; ++j) {
+        if (!nodes[i].root_task[j]) continue;
+
+        finish_task(j);
+
+        pthread_mutex_unlock(&arrays_lock); // This is necessary for calling request_execution
+        request_execution(&tasks[j], j);
+        pthread_mutex_lock(&arrays_lock);
+    }
+
+    sprintf(buffer, "Removed node '%s' after being inactive for %d seconds.", nodes[i].hostname,
+            TIMEOUT);
+    print_log(buffer, 0);
+}
+
 void *monitor_func(void *args) {
     int monitor_sockfd;
     socklen_t len;
@@ -226,18 +249,14 @@ void *monitor_func(void *args) {
             nodes[index].active = 1;
             nodes[index].last_seen = now;
             nodes[index].cpu_load = cpu_load;
-
-            // Remove nodes that have not been seen in a while
-            for (int i = 0; i < NODES_MAX; ++i) {
-                if (nodes[i].active && difftime(now, nodes[i].last_seen) > TIMEOUT) {
-                    nodes[i].active = 0;
-                    total_cpus -= nodes[i].cpus; // Update total CPUs
-                    sprintf(buffer, "Removed node '%s' after being inactive for %d seconds.", nodes[i].hostname,
-                            TIMEOUT);
-                    print_log(buffer, 0);
-                }
-            }
         }
+
+        // Remove nodes that have not been seen in a while
+        for (int i = 0; i < NODES_MAX; ++i) {
+            if (nodes[i].active && difftime(now, nodes[i].last_seen) > TIMEOUT)
+                remove_node(i);
+        }
+
         pthread_mutex_unlock(&arrays_lock);
 #pragma clang diagnostic pop
     }
